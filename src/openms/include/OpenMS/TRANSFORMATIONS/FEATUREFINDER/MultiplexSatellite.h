@@ -62,11 +62,6 @@ namespace OpenMS
     MultiplexSatellite(size_t rt_idx, size_t mz_idx);
     
     /**
-     * @brief constructor
-     */
-    MultiplexSatellite(size_t rt_idx, size_t mz_idx, double mz, double intensity);
-    
-    /**
      * @brief returns the m/z index of the satellite peak
      */
     size_t getMZidx() const;
@@ -75,6 +70,16 @@ namespace OpenMS
      * @brief returns the RT index of the satellite peak
      */
     size_t getRTidx() const;
+    
+    /**
+     * @brief pushes an entry to the m/z result vector
+     */
+    void addMZ(double mz);
+    
+    /**
+     * @brief pushes an entry to the intensity result vector
+     */
+    void addIntensity(double intensity);
     
     /**
      * @brief returns the m/z vector
