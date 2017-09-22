@@ -48,6 +48,13 @@ namespace OpenMS
     rt_idx_(rt_idx), mz_idx_(mz_idx)
   {
   }
+  
+  MultiplexSatellite::MultiplexSatellite(size_t rt_idx, size_t mz_idx, double mz, double intensity) :
+    rt_idx_(rt_idx), mz_idx_(mz_idx)
+  {
+    mz_.push_back(mz);
+    intensity_.push_back(intensity);
+  }
 
   size_t MultiplexSatellite::getMZidx() const
   {
@@ -57,6 +64,16 @@ namespace OpenMS
   size_t MultiplexSatellite::getRTidx() const
   {
     return rt_idx_;
+  }
+  
+  std::vector<double> MultiplexSatellite::getMZ() const
+  {
+    return mz_;
+  }
+
+  std::vector<double> MultiplexSatellite::getIntensity() const
+  {
+    return intensity_;
   }
   
 }
