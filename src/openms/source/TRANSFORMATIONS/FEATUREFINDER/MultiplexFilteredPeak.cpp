@@ -34,7 +34,7 @@
 
 #include <OpenMS/KERNEL/StandardTypes.h>
 #include <OpenMS/CONCEPT/Constants.h>
-#include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatelliteCentroided.h>
+#include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatellite.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatelliteProfile.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexFilteredPeak.h>
 
@@ -73,10 +73,10 @@ namespace OpenMS
 
   void MultiplexFilteredPeak::addSatellite(size_t rt_idx, size_t mz_idx, size_t pattern_idx)
   {
-    satellites_.insert(std::make_pair(pattern_idx, MultiplexSatelliteCentroided(rt_idx, mz_idx)));
+    satellites_.insert(std::make_pair(pattern_idx, MultiplexSatellite(rt_idx, mz_idx)));
   }
   
-  void MultiplexFilteredPeak::addSatellite(MultiplexSatelliteCentroided satellite, size_t pattern_idx)
+  void MultiplexFilteredPeak::addSatellite(MultiplexSatellite satellite, size_t pattern_idx)
   {
     satellites_.insert(std::make_pair(pattern_idx, satellite));
   }
@@ -91,7 +91,7 @@ namespace OpenMS
     satellites_profile_.insert(std::make_pair(pattern_idx, satellite));
   }
   
-  const std::multimap<size_t, MultiplexSatelliteCentroided >& MultiplexFilteredPeak::getSatellites() const
+  const std::multimap<size_t, MultiplexSatellite >& MultiplexFilteredPeak::getSatellites() const
   {
     return satellites_;
   }

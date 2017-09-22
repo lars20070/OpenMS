@@ -43,7 +43,7 @@
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexFilterResult.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexFilterResultRaw.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexFilterResultPeak.h>
-#include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatelliteCentroided.h>
+#include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatellite.h>
 #include <OpenMS/FILTERING/DATAREDUCTION/SplineSpectrum.h>
 #include <OpenMS/MATH/STATISTICS/StatisticFunctions.h>
 #include <OpenMS/MATH/MISC/CubicSpline2d.h>
@@ -175,7 +175,7 @@ namespace OpenMS
 
           //std::cout << "        mz = " << mz << " (" << peak_min << ", " << peak_max << ")\n";
           
-          std::multimap<size_t, MultiplexSatelliteCentroided > satellites = peak.getSatellites();
+          std::multimap<size_t, MultiplexSatellite > satellites = peak.getSatellites();
           
           // Arrangement of peaks looks promising. Now scan through the spline fitted profile data around the peak i.e. from peak boundary to peak boundary.
           for (double mz_profile = peak_min; mz_profile < peak_max; mz_profile = navigators[it_rt_profile - exp_spline_profile_.begin()].getNextMz(mz_profile))
@@ -186,7 +186,7 @@ namespace OpenMS
             std::multimap<size_t, MultiplexSatelliteProfile > satellites_profile;
 
             // construct the set of spline-interpolated satellites for this specific mz_profile
-            for (std::multimap<size_t, MultiplexSatelliteCentroided >::const_iterator satellite_it = satellites.begin(); satellite_it != satellites.end(); ++satellite_it)
+            for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it = satellites.begin(); satellite_it != satellites.end(); ++satellite_it)
             {
               // find indices of the peak
               size_t rt_idx = (satellite_it->second).getRTidx();

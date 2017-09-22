@@ -36,7 +36,7 @@
 #define OPENMS_TRANSFORMATIONS_FEATUREFINDER_MULTIPLEXFILTEREDPEAK_H
 
 #include <OpenMS/KERNEL/StandardTypes.h>
-#include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatelliteCentroided.h>
+#include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatellite.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatelliteProfile.h>
 
 #include <map>
@@ -94,7 +94,7 @@ namespace OpenMS
      */
     void addSatellite(size_t rt_idx, size_t mz_idx, size_t pattern_idx);
     
-    void addSatellite(MultiplexSatelliteCentroided satellite, size_t pattern_idx);
+    void addSatellite(MultiplexSatellite satellite, size_t pattern_idx);
     
     /**
      * @brief add a satellite data point
@@ -106,7 +106,7 @@ namespace OpenMS
     /**
      * @brief return all satellite peaks
      */
-    const std::multimap<size_t, MultiplexSatelliteCentroided >& getSatellites() const;
+    const std::multimap<size_t, MultiplexSatellite >& getSatellites() const;
     
     /**
      * @brief return all satellite data points
@@ -155,14 +155,14 @@ namespace OpenMS
      * White experiments are temporary (for each pattern), but the original
      * <exp_picked_> experiment is permanent.
      */
-    std::multimap<size_t, MultiplexSatelliteCentroided > satellites_;
+    std::multimap<size_t, MultiplexSatellite > satellites_;
     
     /**
      * @brief set of profile satellites (used on profile data only)
      *
      * Mapping from a pattern index i.e. a specific mass trace to all spline-interpolated
      * data points forming the pattern. Basically, when profile data are available as input,
-     * we scan over the profile of each satellite peak (see MultiplexSatelliteCentroided above)
+     * we scan over the profile of each satellite peak (see MultiplexSatellite above)
      * and decide if it passes the filters or not.
      *
      * pattern_idx -> (rt, mz, intensity)

@@ -44,7 +44,7 @@ MultiplexFilterResult.cpp
 MultiplexFilterResultPeak.cpp
 MultiplexFilterResultRaw.cpp
 MultiplexIsotopicPeakPattern.cpp
-MultiplexSatelliteCentroided.cpp
+MultiplexSatellite.cpp
 MultiplexSatelliteProfile.cpp
 PeakWidthEstimator.cpp
 ProductModel.cpp
