@@ -172,26 +172,9 @@ namespace OpenMS
            */
 
           // push peak m/z and peak intensity of each satellite to the result vectors
-          // (later on we will construct peptide features from them)
-          std::multimap<size_t, MultiplexSatellite > satellites = peak.getSatellites();
-          // loop over satellites
-          for (std::multimap<size_t, MultiplexSatellite >::iterator it = satellites.begin(); it != satellites.end(); ++it)
-          {
-            // find indices of the peak
-            size_t rt_idx = (it->second).getRTidx();
-            size_t mz_idx = (it->second).getMZidx();
-              
-            // find peak itself
-            MSExperiment::ConstIterator it_rt = exp_picked_.begin();
-            std::advance(it_rt, rt_idx);
-            MSSpectrum<Peak1D>::ConstIterator it_mz = it_rt->begin();
-            std::advance(it_mz, mz_idx);
-            
-            // push to the result vectors
-            (it->second).addMZ(it_mz->getMZ());
-            (it->second).addIntensity(it_mz->getIntensity());
-          }
-
+          peak.pushPeakToResults(exp_picked_);
+          
+          // add peak to the results
           result.addPeak(peak);
           blacklistPeak_(peak, pattern_idx);
         }

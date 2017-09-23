@@ -33,6 +33,7 @@
 // --------------------------------------------------------------------------
 
 #include <OpenMS/KERNEL/StandardTypes.h>
+#include <OpenMS/KERNEL/MSExperiment.h>
 #include <OpenMS/CONCEPT/Constants.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatellite.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatelliteProfile.h>
@@ -110,4 +111,26 @@ namespace OpenMS
   {
     return satellites_profile_.size();
   }
+  
+  void MultiplexFilteredPeak::pushPeakToResults(const MSExperiment& exp_picked)
+  {
+    // loop over satellites
+    for (std::multimap<size_t, MultiplexSatellite >::iterator it = satellites_.begin(); it != satellites_.end(); ++it)
+    {
+      // find indices of the peak
+      size_t rt_idx = (it->second).getRTidx();
+      size_t mz_idx = (it->second).getMZidx();
+        
+      // find peak itself
+      MSExperiment::ConstIterator it_rt = exp_picked.begin();
+      std::advance(it_rt, rt_idx);
+      MSSpectrum<Peak1D>::ConstIterator it_mz = it_rt->begin();
+      std::advance(it_mz, mz_idx);
+      
+      // push to the result vectors
+      (it->second).addMZ(it_mz->getMZ());
+      (it->second).addIntensity(it_mz->getIntensity());
+    }
+  }
+  
 }

@@ -35,6 +35,7 @@
 #ifndef OPENMS_TRANSFORMATIONS_FEATUREFINDER_MULTIPLEXFILTEREDPEAK_H
 #define OPENMS_TRANSFORMATIONS_FEATUREFINDER_MULTIPLEXFILTEREDPEAK_H
 
+#include <OpenMS/KERNEL/MSExperiment.h>
 #include <OpenMS/KERNEL/StandardTypes.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatellite.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatelliteProfile.h>
@@ -122,6 +123,22 @@ namespace OpenMS
      * @brief return number of satellite data points
      */
     size_t sizeProfile() const;
+    
+    /**
+     * @brief push peak to result vector (used in centroid mode)
+     * 
+     * push peak m/z and peak intensity of each satellite to the result vectors
+     * (later on we will construct peptide features from them)
+     */
+    void pushPeakToResults(const MSExperiment& exp_picked);
+    
+    /**
+     * @brief push candidate data point to result vector (used in profile mode)
+     * 
+     * push m/z and corresponding spline-interpolated intensity of a candidate data to the result vectors
+     * (later on we will construct peptide features from them)
+     */
+    void pushDataPointToResults();
     
     private:
     /**
