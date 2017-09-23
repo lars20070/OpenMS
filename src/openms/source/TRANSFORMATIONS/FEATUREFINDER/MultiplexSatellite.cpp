@@ -64,6 +64,26 @@ namespace OpenMS
     return rt_idx_;
   }
   
+  void MultiplexSatellite::setMZTemp(double mz_temp)
+  {
+    mz_temp_ = mz_temp;
+  }
+  
+  void MultiplexSatellite::setIntensityTemp(double intensity_temp)
+  {
+    intensity_temp_ = intensity_temp;
+  }
+  
+  double MultiplexSatellite::getMZTemp() const
+  {
+    return mz_temp_;
+  }
+  
+  double MultiplexSatellite::getIntensityTemp() const
+  {
+    return intensity_temp_;
+  }
+  
   void MultiplexSatellite::addMZ(double mz)
   {
     mz_.push_back(mz);

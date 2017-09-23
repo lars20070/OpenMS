@@ -77,6 +77,26 @@ namespace OpenMS
     size_t getRTidx() const;
     
     /**
+     * @brief set the m/z of the candidate data point
+     */
+    void setMZTemp(double mz_temp);
+    
+    /**
+     * @brief set the intensity of the candidate data point
+     */
+    void setIntensityTemp(double intensity_temp);
+    
+    /**
+     * @brief returns the m/z of the candidate data point
+     */
+    double getMZTemp() const;
+    
+    /**
+     * @brief returns the intensity of the candidate data point
+     */
+    double getIntensityTemp() const;
+    
+    /**
      * @brief pushes an entry to the m/z result vector
      */
     void addMZ(double mz);

@@ -133,4 +133,15 @@ namespace OpenMS
     }
   }
   
+  void MultiplexFilteredPeak::pushDataPointToResults()
+  {
+    // loop over satellites
+    for (std::multimap<size_t, MultiplexSatellite >::iterator it = satellites_.begin(); it != satellites_.end(); ++it)
+    {
+      // push candidate to the result vectors
+      (it->second).addMZ(42.0);
+      (it->second).addIntensity(42.0);
+    }
+  }
+  
 }
