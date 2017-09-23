@@ -598,9 +598,9 @@ public:
           
           // loop over satellites for this isotope in the second peptide
           double rt_earlier = -1;
-          double intensity_earlier = -1;
+          std::vector<double> intensity_earlier;
           double rt_later = -1;
-          double intensity_later = -1;
+          std::vector<double> intensity_later;
           for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it_2 = satellites_isotope_2.first; satellite_it_2 != satellites_isotope_2.second; ++satellite_it_2)
           {
             // find indices of the peak
@@ -622,13 +622,13 @@ public:
             if (it_rt_2->getRT() <= rt_2 && (std::abs(it_rt_2->getRT() - rt_2) < std::abs(rt_earlier - rt_2)))
             {
               rt_earlier = it_rt_2->getRT();
-              intensity_earlier = it_mz_2->getIntensity();
+              intensity_earlier = intensity_profile_2;
             }
             
             if (it_rt_2->getRT() >= rt_2 && (std::abs(it_rt_2->getRT() - rt_2) < std::abs(rt_later - rt_2)))
             {
               rt_later = it_rt_2->getRT();
-              intensity_later = it_mz_2->getIntensity();
+              intensity_later = intensity_profile_2;
             }
             
           }
@@ -637,18 +637,27 @@ public:
           if ((rt_earlier > 0) && (rt_later > 0))
           {
             // linearly interpolated intensity
-            double intensity_other;
+            // TODO: Maybe linear interpolation between spectra does more bad than good. Perhaps simply pick the nearest spectrum?
+            std::vector<double> intensity_other;
             if ((rt_2 == rt_earlier) || (rt_later == rt_earlier))
             {
               intensity_other = intensity_earlier;
             }
             else
             {
-              intensity_other = intensity_earlier + (intensity_later - intensity_earlier)*(rt_2 - rt_earlier)/(rt_later - rt_earlier);
+              // loop simultaneously over earlier and later intensity vectors
+              std::vector<double>::const_iterator it_earlier;
+              std::vector<double>::const_iterator it_later;
+              for (it_earlier = intensity_earlier.begin(), it_later = intensity_later.begin();
+                   it_earlier != intensity_earlier.end(), it_later != intensity_later.end();
+                   ++it_earlier, ++it_later)
+              {
+                intensity_other.push_back(*it_earlier + (*it_later - *it_earlier)*(rt_2 - rt_earlier)/(rt_later - rt_earlier));
+              }
             }
             
-            intensities_light.push_back(it_mz_1->getIntensity());
-            intensities_other.push_back(intensity_other);
+            intensities_light.insert(intensities_light.end(), intensity_profile_1.begin(), intensity_profile_1.end());
+            intensities_other.insert(intensities_other.end(), intensity_other.begin(), intensity_other.end());
           }
         }
         
