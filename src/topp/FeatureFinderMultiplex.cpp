@@ -988,14 +988,29 @@ public:
               MSSpectrum<Peak1D>::ConstIterator it_mz = it_rt->begin();
               std::advance(it_mz, mz_idx);
               
-              if (isotope == 0)
-              {
-                rt += it_rt->getRT() * it_mz->getIntensity();
-                mz += it_mz->getMZ() * it_mz->getIntensity();
-                intensity_sum += it_mz->getIntensity();
-              }
+              // get profile vectors
+              // In the centroid case, a single entry.
+              // In the profile case, all data points from scanning over the peak profile.
+              std::vector<double> mz_profile = (satellite_it->second).getMZ();
+              std::vector<double> intensity_profile = (satellite_it->second).getIntensity();
               
-              mass_trace.enlarge(it_rt->getRT(), it_mz->getMZ());
+              // loop over profile data points
+              std::vector<double>::const_iterator it_mz_profile;
+              std::vector<double>::const_iterator it_intensity_profile;
+              for (it_mz_profile = mz_profile.begin(), it_intensity_profile = intensity_profile.begin();
+                   it_mz_profile != mz_profile.end(), it_intensity_profile != intensity_profile.end();
+                   ++it_mz_profile, ++it_intensity_profile)
+              {
+                if (isotope == 0)
+                {
+                  rt += it_rt->getRT() * (*it_intensity_profile);
+                  mz += it_mz->getMZ() * (*it_intensity_profile);
+                  intensity_sum += (*it_intensity_profile);
+                }
+                
+                mass_trace.enlarge(it_rt->getRT(), (*it_mz_profile));
+              }
+   
             }
             
             if ((mass_trace.width() == 0) || (mass_trace.height() == 0))
