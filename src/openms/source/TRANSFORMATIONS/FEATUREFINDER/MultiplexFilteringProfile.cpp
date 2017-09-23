@@ -186,7 +186,7 @@ namespace OpenMS
             std::multimap<size_t, MultiplexSatelliteProfile > satellites_profile;
 
             // construct the set of spline-interpolated satellites for this specific mz_profile
-            for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it = satellites.begin(); satellite_it != satellites.end(); ++satellite_it)
+            for (std::multimap<size_t, MultiplexSatellite >::iterator satellite_it = satellites.begin(); satellite_it != satellites.end(); ++satellite_it)
             {
               // find indices of the peak
               size_t rt_idx = (satellite_it->second).getRTidx();
@@ -205,15 +205,19 @@ namespace OpenMS
               double mz = mz_satellite + mz_shift;
               double intensity = navigators[rt_idx].eval(mz);
               
+              (satellite_it->second).setMZTemp(mz);
+              (satellite_it->second).setIntensityTemp(intensity);
+              
+              // TO BE REMOVED
               satellites_profile.insert(std::make_pair(satellite_it->first, MultiplexSatelliteProfile(rt_satellite, mz, intensity)));
             }
             
-            if (!(filterAveragineModel_(pattern, peak, satellites_profile)))
+            if (!(filterAveragineModel_(pattern, peak)))
             {
               continue;
             }
             
-            if (!(filterPeptideCorrelation_(pattern, peak, satellites_profile)))
+            if (!(filterPeptideCorrelation_(pattern, peak)))
             {
               continue;
             }
@@ -255,7 +259,7 @@ namespace OpenMS
     return filter_results;
   }
 
-  bool MultiplexFilteringProfile::filterAveragineModel_(const MultiplexIsotopicPeakPattern& pattern, const MultiplexFilteredPeak& peak, std::multimap<size_t, MultiplexSatelliteProfile > satellites_profile) const
+  bool MultiplexFilteringProfile::filterAveragineModel_(const MultiplexIsotopicPeakPattern& pattern, const MultiplexFilteredPeak& peak) const
   {
     // construct averagine distribution
     // Note that the peptide(s) are very close in mass. We therefore calculate the averagine distribution only once (for the lightest peptide).
@@ -302,17 +306,17 @@ namespace OpenMS
       for (size_t isotope = 0; isotope < isotopes_per_peptide_max_; ++isotope)
       {
         size_t idx = peptide * isotopes_per_peptide_max_ + isotope;
-        std::pair<std::multimap<size_t, MultiplexSatelliteProfile >::const_iterator, std::multimap<size_t, MultiplexSatelliteProfile >::const_iterator> satellites;
-        satellites = satellites_profile.equal_range(idx);
+        std::pair<std::multimap<size_t, MultiplexSatellite >::const_iterator, std::multimap<size_t, MultiplexSatellite >::const_iterator> satellites;
+        satellites = peak.getSatellites().equal_range(idx);
         
         int count = 0;
         double sum_intensities = 0;
         
         // loop over satellites in mass trace
-        for (std::multimap<size_t, MultiplexSatelliteProfile >::const_iterator it = satellites.first; it != satellites.second; ++it)
+        for (std::multimap<size_t, MultiplexSatellite >::const_iterator it = satellites.first; it != satellites.second; ++it)
         {
           ++count;
-          sum_intensities += (it->second).getIntensity();
+          sum_intensities += (it->second).getIntensityTemp();
         }
         
         if (count > 0)
@@ -353,7 +357,7 @@ namespace OpenMS
     return true;
   }
   
-  bool MultiplexFilteringProfile::filterPeptideCorrelation_(const MultiplexIsotopicPeakPattern& pattern, const MultiplexFilteredPeak& peak, const std::multimap<size_t, MultiplexSatelliteProfile > satellites_profile) const
+  bool MultiplexFilteringProfile::filterPeptideCorrelation_(const MultiplexIsotopicPeakPattern& pattern, const MultiplexFilteredPeak& peak) const
   {
     if (pattern.getMassShiftCount() < 2)
     {
@@ -392,25 +396,25 @@ namespace OpenMS
           size_t idx_1 = peptide_1 * isotopes_per_peptide_max_ + isotope;
           size_t idx_2 = peptide_2 * isotopes_per_peptide_max_ + isotope;
           
-          std::pair<std::multimap<size_t, MultiplexSatelliteProfile >::const_iterator, std::multimap<size_t, MultiplexSatelliteProfile >::const_iterator> satellites_1;
-          std::pair<std::multimap<size_t, MultiplexSatelliteProfile >::const_iterator, std::multimap<size_t, MultiplexSatelliteProfile >::const_iterator> satellites_2;
-          satellites_1 = satellites_profile.equal_range(idx_1);
-          satellites_2 = satellites_profile.equal_range(idx_2);
+          std::pair<std::multimap<size_t, MultiplexSatellite >::const_iterator, std::multimap<size_t, MultiplexSatellite >::const_iterator> satellites_1;
+          std::pair<std::multimap<size_t, MultiplexSatellite >::const_iterator, std::multimap<size_t, MultiplexSatellite >::const_iterator> satellites_2;
+          satellites_1 = peak.getSatellites().equal_range(idx_1);
+          satellites_2 = peak.getSatellites().equal_range(idx_2);
           
           // loop over satellites in mass trace 1
-          for (std::multimap<size_t, MultiplexSatelliteProfile >::const_iterator satellite_it_1 = satellites_1.first; satellite_it_1 != satellites_1.second; ++satellite_it_1)
+          for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it_1 = satellites_1.first; satellite_it_1 != satellites_1.second; ++satellite_it_1)
           {
-            double rt_1 = (satellite_it_1->second).getRT();
+            double rt_idx_1 = (satellite_it_1->second).getRTidx();
             
             // loop over satellites in mass trace 2
-            for (std::multimap<size_t, MultiplexSatelliteProfile >::const_iterator satellite_it_2 = satellites_2.first; satellite_it_2 != satellites_2.second; ++satellite_it_2)
+            for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it_2 = satellites_2.first; satellite_it_2 != satellites_2.second; ++satellite_it_2)
             {
-              double rt_2 = (satellite_it_2->second).getRT();
+              double rt_idx_2 = (satellite_it_2->second).getRTidx();
               
-              if (rt_1 == rt_2)
+              if (rt_idx_1 == rt_idx_2)
               {
-                intensities_1.push_back((satellite_it_1->second).getIntensity());
-                intensities_2.push_back((satellite_it_2->second).getIntensity());
+                intensities_1.push_back((satellite_it_1->second).getIntensityTemp());
+                intensities_2.push_back((satellite_it_2->second).getIntensityTemp());
               }
 
             }
