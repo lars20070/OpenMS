@@ -98,21 +98,14 @@ namespace OpenMS
     void addSatellite(MultiplexSatellite satellite, size_t pattern_idx);
     
     /**
-     * @brief add a satellite data point
+     * @brief set all satellite peaks
      */
-    void addSatelliteProfile(double rt, double mz, double intensity, size_t pattern_idx);
-    
-    void addSatelliteProfile(MultiplexSatelliteProfile satellite, size_t pattern_idx);
+    void setSatellites(const std::multimap<size_t, MultiplexSatellite >& satellites);
     
     /**
      * @brief return all satellite peaks
      */
     const std::multimap<size_t, MultiplexSatellite >& getSatellites() const;
-    
-    /**
-     * @brief return all satellite data points
-     */
-    const std::multimap<size_t, MultiplexSatelliteProfile >& getSatellitesProfile() const;
     
     /**
      * @brief return number of satellite peaks
@@ -174,18 +167,6 @@ namespace OpenMS
      */
     std::multimap<size_t, MultiplexSatellite > satellites_;
     
-    /**
-     * @brief set of profile satellites (used on profile data only)
-     *
-     * Mapping from a pattern index i.e. a specific mass trace to all spline-interpolated
-     * data points forming the pattern. Basically, when profile data are available as input,
-     * we scan over the profile of each satellite peak (see MultiplexSatellite above)
-     * and decide if it passes the filters or not.
-     *
-     * pattern_idx -> (rt, mz, intensity)
-     */
-    std::multimap<size_t, MultiplexSatelliteProfile > satellites_profile_;
- 
   };
   
 }

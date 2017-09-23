@@ -82,24 +82,14 @@ namespace OpenMS
     satellites_.insert(std::make_pair(pattern_idx, satellite));
   }
   
-  void MultiplexFilteredPeak::addSatelliteProfile(double rt, double mz, double intensity, size_t pattern_idx)
+  void MultiplexFilteredPeak::setSatellites(const std::multimap<size_t, MultiplexSatellite >& satellites)
   {
-    satellites_profile_.insert(std::make_pair(pattern_idx, MultiplexSatelliteProfile(rt, mz, intensity)));
-  }
-  
-  void MultiplexFilteredPeak::addSatelliteProfile(MultiplexSatelliteProfile satellite, size_t pattern_idx)
-  {
-    satellites_profile_.insert(std::make_pair(pattern_idx, satellite));
+    satellites_ = satellites;
   }
   
   const std::multimap<size_t, MultiplexSatellite >& MultiplexFilteredPeak::getSatellites() const
   {
     return satellites_;
-  }
-  
-  const std::multimap<size_t, MultiplexSatelliteProfile >& MultiplexFilteredPeak::getSatellitesProfile() const
-  {
-    return satellites_profile_;
   }
   
   size_t MultiplexFilteredPeak::size() const
@@ -109,7 +99,12 @@ namespace OpenMS
   
   size_t MultiplexFilteredPeak::sizeProfile() const
   {
-    return satellites_profile_.size();
+    if (satellites_.size() == 0)
+    {
+      return 0;
+    }
+    
+    return satellites_.begin()->second.getMZ().size();
   }
   
   void MultiplexFilteredPeak::pushPeakToResults(const MSExperiment& exp_picked)
@@ -139,8 +134,8 @@ namespace OpenMS
     for (std::multimap<size_t, MultiplexSatellite >::iterator it = satellites_.begin(); it != satellites_.end(); ++it)
     {
       // push candidate to the result vectors
-      (it->second).addMZ(42.0);
-      (it->second).addIntensity(42.0);
+      (it->second).addMZ((it->second).getMZTemp());
+      (it->second).addIntensity((it->second).getIntensityTemp());
     }
   }
   
