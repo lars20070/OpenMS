@@ -487,8 +487,6 @@ public:
    */
   std::vector<double> determinePeptideIntensities_(MultiplexIsotopicPeakPattern& pattern, std::multimap<size_t, MultiplexSatellite >& satellites)
   {
-    std::cout << "I am in determinePeptideIntensities_.\n";
-    
     // determine RT shift between the peptides
     // i.e. first determine the RT centre of mass for each peptide
     std::vector<double> rt_peptide;
@@ -512,8 +510,6 @@ public:
         // loop over satellites for this isotope i.e. mass trace
         for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it = satellites_isotope.first; satellite_it != satellites_isotope.second; ++satellite_it)
         {
-          //std::cout << "    I am looping over satellites.\n";
-          
           // find indices of the peak
           size_t rt_idx = (satellite_it->second).getRTidx();
           size_t mz_idx = (satellite_it->second).getMZidx();
@@ -530,22 +526,12 @@ public:
           std::vector<double> mz_profile = (satellite_it->second).getMZ();
           std::vector<double> intensity_profile = (satellite_it->second).getIntensity();
           
-          //std::cout << "    size of vectors = " << mz_profile.size() << " " << intensity_profile.size() << "\n";
-          
           // loop over profile data points
-          size_t count(0);
           for (std::vector<double>::const_iterator it_intensity = intensity_profile.begin(); it_intensity < intensity_profile.end(); ++it_intensity)
           {
             rt += it_rt->getRT() * (*it_intensity);
             intensity_sum += (*it_intensity);
-            
-            ++count;
-            //std::cout << "count = " << count << "\n";
           }
-          
-          // OLD CENTROID VERSION
-          //rt += it_rt->getRT() * it_mz->getIntensity();
-          //intensity_sum += it_mz->getIntensity();
         }
       }
       
@@ -929,7 +915,7 @@ public:
               continue;
             }
             
-            satellites.insert(std::make_pair(satellite_it->first, MultiplexSatellite(satellite_it->second.getRTidx(), satellite_it->second.getMZidx())));
+            satellites.insert(std::make_pair(satellite_it->first, MultiplexSatellite(satellite_it->second.getRTidx(), satellite_it->second.getMZidx(), satellite_it->second.getMZ(), satellite_it->second.getIntensity())));
           }
         }
         

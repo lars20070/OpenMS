@@ -62,6 +62,11 @@ namespace OpenMS
     MultiplexSatellite(size_t rt_idx, size_t mz_idx);
     
     /**
+     * @brief constructor
+     */
+    MultiplexSatellite(size_t rt_idx, size_t mz_idx, std::vector<double> mz, std::vector<double> intensity);
+    
+    /**
      * @brief returns the m/z index of the satellite peak
      */
     size_t getMZidx() const;
