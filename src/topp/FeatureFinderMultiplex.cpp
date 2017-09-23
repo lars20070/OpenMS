@@ -574,6 +574,12 @@ public:
           MSSpectrum<Peak1D>::ConstIterator it_mz_1 = it_rt_1->begin();
           std::advance(it_mz_1, mz_idx_1);
           
+          // get profile vectors
+          // In the centroid case, a single entry.
+          // In the profile case, all data points from scanning over the peak profile.
+          std::vector<double> mz_profile_1 = (satellite_it_1->second).getMZ();
+          std::vector<double> intensity_profile_1 = (satellite_it_1->second).getIntensity();
+          
           // find corresponding spectra
           double rt_1 = it_rt_1->getRT();
           double rt_2_target = rt_1 + rt_peptide[peptide] - rt_peptide[0];
@@ -606,7 +612,13 @@ public:
             std::advance(it_rt_2, rt_idx_2);
             MSSpectrum<Peak1D>::ConstIterator it_mz_2 = it_rt_2->begin();
             std::advance(it_mz_2, mz_idx_2);
-            
+ 
+            // get profile vectors
+            // In the centroid case, a single entry.
+            // In the profile case, all data points from scanning over the peak profile.
+            std::vector<double> mz_profile_2 = (satellite_it_2->second).getMZ();
+            std::vector<double> intensity_profile_2 = (satellite_it_2->second).getIntensity();
+           
             if (it_rt_2->getRT() <= rt_2 && (std::abs(it_rt_2->getRT() - rt_2) < std::abs(rt_earlier - rt_2)))
             {
               rt_earlier = it_rt_2->getRT();
