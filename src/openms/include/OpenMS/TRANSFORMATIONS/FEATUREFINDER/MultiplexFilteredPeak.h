@@ -37,6 +37,7 @@
 
 #include <OpenMS/KERNEL/MSExperiment.h>
 #include <OpenMS/KERNEL/StandardTypes.h>
+#include <OpenMS/FILTERING/DATAREDUCTION/SplineSpectrum.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatellite.h>
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexSatelliteProfile.h>
 
@@ -98,11 +99,6 @@ namespace OpenMS
     void addSatellite(MultiplexSatellite satellite, size_t pattern_idx);
     
     /**
-     * @brief set all satellite peaks
-     */
-    void setSatellites(const std::multimap<size_t, MultiplexSatellite >& satellites);
-    
-    /**
      * @brief return all satellite peaks
      */
     const std::multimap<size_t, MultiplexSatellite >& getSatellites() const;
@@ -116,6 +112,13 @@ namespace OpenMS
      * @brief return number of satellite data points
      */
     size_t sizeProfile() const;
+    
+    /**
+     * @brief update the temporary data points in each satellite
+     * 
+     * These (m/z, intensity) pairs will be used for the subsequent averagine and peptide correlation filters.
+     */
+    void updateCandidate(const MSExperiment& exp_picked, double mz_shift, std::vector<SplineSpectrum::Navigator>& navigators);
     
     /**
      * @brief push peak to result vector (used in centroid mode)

@@ -151,15 +151,13 @@ namespace OpenMS
         MSExperiment::ConstIterator it_rt_picked_band_begin = exp_picked_white.RTBegin(rt - rt_band_/2);
         MSExperiment::ConstIterator it_rt_picked_band_end = exp_picked_white.RTEnd(rt + rt_band_/2);
         
-        std::cout << "    RT = " << rt << "\n";
+        //std::cout << "    RT = " << rt << "\n";
         
         // loop over mz
         for (MSSpectrum<Peak1D>::ConstIterator it_mz = it_rt_picked->begin(); it_mz != it_rt_picked->end(); ++it_mz)
         {
           double mz = it_mz->getMZ();
           MultiplexFilteredPeak peak(mz, rt, exp_picked_mapping[it_rt_picked - exp_picked_white.begin()][it_mz - it_rt_picked->begin()], it_rt_picked - exp_picked_white.begin());
-          
-          //std::cout << "        mz = " << mz << "     mz idx (white) = " << (it_mz - it_rt_picked->begin()) << "     mz idx (original) = " << exp_picked_mapping[it_rt_picked - exp_picked_white.begin()][it_mz - it_rt_picked->begin()] << "\n";
           
           if (!(filterPeakPositions_(it_mz, exp_picked_mapping, exp_picked_white.begin(), it_rt_picked_band_begin, it_rt_picked_band_end, pattern, peak)))
           {
@@ -172,9 +170,9 @@ namespace OpenMS
           
           double rt_peak = peak.getRT();
           double mz_peak = peak.getMZ();
-
-          std::cout << "        mz = " << mz << " (" << peak_min << ", " << peak_max << ")\n";
           
+          //std::cout << "        m/z (peak) = " << mz_peak << "\n";
+
           std::multimap<size_t, MultiplexSatellite > satellites = peak.getSatellites();
           
           // Arrangement of peaks looks promising. Now scan through the spline fitted profile data around the peak i.e. from peak boundary to peak boundary.
@@ -183,46 +181,18 @@ namespace OpenMS
             // determine m/z shift relative to the centroided peak at which the profile data will be sampled
             double mz_shift = mz_profile - mz_peak;
 
-            // construct the set of spline-interpolated satellites for this specific mz_profile
-            for (std::multimap<size_t, MultiplexSatellite >::iterator satellite_it = satellites.begin(); satellite_it != satellites.end(); ++satellite_it)
-            {
-              // find indices of the peak
-              size_t rt_idx = (satellite_it->second).getRTidx();
-              size_t mz_idx = (satellite_it->second).getMZidx();
-              
-              // find peak itself
-              MSExperiment::ConstIterator it_rt = exp_picked_.begin();
-              std::advance(it_rt, rt_idx);
-              MSSpectrum<Peak1D>::ConstIterator it_mz = it_rt->begin();
-              std::advance(it_mz, mz_idx);
-              
-              double rt_satellite = it_rt->getRT();
-              double mz_satellite = it_mz->getMZ();
-              
-              // determine m/z and corresponding intensity
-              double mz = mz_satellite + mz_shift;
-              double intensity = navigators[rt_idx].eval(mz);
-              
-              (satellite_it->second).setMZTemp(mz);
-              (satellite_it->second).setIntensityTemp(intensity);   
-            }
-            
-            // update satellites
-            peak.setSatellites(satellites);
+            // update the m/z and corresponding spline-interpolated intensities for each satellite of the peak
+            peak.updateCandidate(exp_picked_, mz_shift, navigators);
  
             if (!(filterAveragineModel_(pattern, peak)))
             {
               continue;
             }
             
-            std::cout << "AVERAGINE FILTER PASSED.\n";
-            
             if (!(filterPeptideCorrelation_(pattern, peak)))
             {
               continue;
             }
-            
-            std::cout << "ALL FILTERS PASSED!\n";
             
             /**
              * All filters passed.
@@ -241,6 +211,8 @@ namespace OpenMS
         }
         
       }
+      
+      std::cout << "pattern = " << pattern_idx << "    result size = " << result.size() << "\n";
       
       // add results of this pattern to list
       filter_results.push_back(result);
@@ -291,6 +263,8 @@ namespace OpenMS
     {
       std::cout << "Inside the Averagine Filter.\n";
     }*/
+    
+    //std::cout << "            Inside the Averagine Filter.    number of satellites = " << peak.getSatellites().size() << "\n";
   
     // loop over peptides
     for (size_t peptide = 0; peptide < pattern.getMassShiftCount(); ++peptide)
@@ -317,6 +291,8 @@ namespace OpenMS
           
           //std::cout << "    intensity temp = " << (it->second).getIntensityTemp() << "\n";
         }
+        
+        //std::cout << "peptide = " << peptide << "  isotope = " << isotope << "  number of satellites = " << count << "\n";
         
         if (count > 0)
         {
@@ -345,6 +321,8 @@ namespace OpenMS
       {
         std::cout << "        Pearson correlation = " << correlation_Pearson << "    rank correlation = " << correlation_Spearman << "\n";
       }*/
+      
+      //std::cout << "    Pearson correlation = " << correlation_Pearson << "    rank correlation = " << correlation_Spearman << "\n";
       
       if ((correlation_Pearson < averagine_similarity_) || (correlation_Spearman < averagine_similarity_))
       {

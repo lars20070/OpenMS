@@ -1464,14 +1464,14 @@ private:
     {
       consensus_map.setPrimaryMSRunPath(exp_centroid_.getPrimaryMSRunPath());
       feature_map.setPrimaryMSRunPath(exp_centroid_.getPrimaryMSRunPath());
-      generateMaps_(patterns, filter_results, cluster_results, consensus_map, feature_map);
     }
     else
     {
       consensus_map.setPrimaryMSRunPath(exp_profile_.getPrimaryMSRunPath());
       feature_map.setPrimaryMSRunPath(exp_profile_.getPrimaryMSRunPath());
-      generateMaps_(patterns, filter_results, cluster_results, consensus_map, feature_map);
     }
+    
+    generateMaps_(patterns, filter_results, cluster_results, consensus_map, feature_map);
     
     if (out_ != "")
     {
