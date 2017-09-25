@@ -206,7 +206,7 @@ namespace OpenMS
           // If some satellite data points passed all filters, we can add the peak to the filter result.
           if (peak.sizeProfile() > 0)
           {
-            std::cout << "        size profile = " << peak.sizeProfile() << "\n";
+            //std::cout << "        size profile = " << peak.sizeProfile() << "\n";
             
             result.addPeak(peak);
             blacklistPeak_(peak, pattern_idx);
@@ -216,7 +216,7 @@ namespace OpenMS
         
       }
       
-      std::cout << "pattern = " << pattern_idx << "    result size = " << result.size() << "\n";
+      //std::cout << "pattern = " << pattern_idx << "    result size = " << result.size() << "\n";
       
       // add results of this pattern to list
       filter_results.push_back(result);

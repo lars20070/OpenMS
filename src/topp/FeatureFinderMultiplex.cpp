@@ -905,11 +905,15 @@ public:
     // loop over peak patterns
     for (unsigned pattern = 0; pattern < patterns.size(); ++pattern)
     {
+      //std::cout << "pattern = " << pattern << "    number of clusters = " << cluster_results[pattern].size() << "\n";
+      
       // loop over clusters
       for (std::map<int, GridBasedCluster>::const_iterator cluster_it = cluster_results[pattern].begin(); cluster_it != cluster_results[pattern].end(); ++cluster_it)
       {
         GridBasedCluster cluster = cluster_it->second;
         std::vector<int> points = cluster.getPoints();
+        
+        //std::cout << "\n    number of points = " << points.size() << "\n";
         
         // Construct a satellite set for the complete peptide multiplet
         // Make sure there are no duplicates, i.e. the same satellite from different filtered peaks.
@@ -940,8 +944,12 @@ public:
           }
         }
         
+        //std::cout << "    number of satellites = " << satellites.size() << "\n";
+        
         // determine peptide intensities
         std::vector<double> peptide_intensities = determinePeptideIntensities_(patterns[pattern], satellites);
+        
+        //std::cout << "    Peptide Intensities Successfully Determined.  " << peptide_intensities[0] << "  " << peptide_intensities[1] << "\n";
         
         // If no reliable peptide intensity can be determined, we do not report the peptide multiplet.
         if (peptide_intensities[0] == -1)
@@ -957,6 +965,8 @@ public:
         // loop over peptides
         for (size_t peptide = 0; (peptide < patterns[pattern].getMassShiftCount() && !abort); ++peptide)
         {
+          //std::cout << "      peptide = " << peptide << "\n";
+          
           // coordinates of the peptide feature
           // RT is the intensity-average of all satellites peaks of the mono-isotopic mass trace
           // m/z is the intensity-average of all satellites peaks of the mono-isotopic mass trace
@@ -1086,6 +1096,10 @@ public:
       }
       
     }
+    
+    std::cout << "\n";
+    std::cout << "number of features    = " << feature_map.size() << "\n";
+    std::cout << "number of consensuses = " << consensus_map.size() << "\n";
     
   }
   
@@ -1473,14 +1487,14 @@ private:
     
     generateMaps_(patterns, filter_results, cluster_results, consensus_map, feature_map);
     
-    /*if (out_ != "")
+    if (out_ != "")
     {
       writeConsensusMap_(out_, consensus_map);
     }
     if (out_features_ != "")
     {
       writeFeatureMap_(out_features_, feature_map);
-    }*/
+    }
 
     /*if (out_mzq_ != "")
     {
