@@ -1473,14 +1473,14 @@ private:
     
     generateMaps_(patterns, filter_results, cluster_results, consensus_map, feature_map);
     
-    if (out_ != "")
+    /*if (out_ != "")
     {
       writeConsensusMap_(out_, consensus_map);
     }
     if (out_features_ != "")
     {
       writeFeatureMap_(out_features_, feature_map);
-    }
+    }*/
 
     /*if (out_mzq_ != "")
     {

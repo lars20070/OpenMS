@@ -151,7 +151,7 @@ namespace OpenMS
         MSExperiment::ConstIterator it_rt_picked_band_begin = exp_picked_white.RTBegin(rt - rt_band_/2);
         MSExperiment::ConstIterator it_rt_picked_band_end = exp_picked_white.RTEnd(rt + rt_band_/2);
         
-        //std::cout << "    RT = " << rt << "\n";
+        //std::cout << "RT = " << rt << "\n";
         
         // loop over mz
         for (MSSpectrum<Peak1D>::ConstIterator it_mz = it_rt_picked->begin(); it_mz != it_rt_picked->end(); ++it_mz)
@@ -171,7 +171,7 @@ namespace OpenMS
           double rt_peak = peak.getRT();
           double mz_peak = peak.getMZ();
           
-          //std::cout << "        m/z (peak) = " << mz_peak << "\n";
+          //std::cout << "    m/z (peak) = " << mz_peak << "\n";
 
           std::multimap<size_t, MultiplexSatellite > satellites = peak.getSatellites();
           
@@ -180,9 +180,11 @@ namespace OpenMS
           {
             // determine m/z shift relative to the centroided peak at which the profile data will be sampled
             double mz_shift = mz_profile - mz_peak;
+            
+            //std::cout << "        m/z shift = " << mz_shift << "\n";
 
             // update the m/z and corresponding spline-interpolated intensities for each satellite of the peak
-            peak.updateCandidate(exp_picked_, mz_shift, navigators);
+            peak.updateCandidates(exp_picked_, mz_shift, navigators);
  
             if (!(filterAveragineModel_(pattern, peak)))
             {
@@ -204,6 +206,8 @@ namespace OpenMS
           // If some satellite data points passed all filters, we can add the peak to the filter result.
           if (peak.sizeProfile() > 0)
           {
+            std::cout << "        size profile = " << peak.sizeProfile() << "\n";
+            
             result.addPeak(peak);
             blacklistPeak_(peak, pattern_idx);
           }

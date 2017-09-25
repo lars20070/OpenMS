@@ -118,7 +118,7 @@ namespace OpenMS
      * 
      * These (m/z, intensity) pairs will be used for the subsequent averagine and peptide correlation filters.
      */
-    void updateCandidate(const MSExperiment& exp_picked, double mz_shift, std::vector<SplineSpectrum::Navigator>& navigators);
+    void updateCandidates(const MSExperiment& exp_picked, double mz_shift, std::vector<SplineSpectrum::Navigator>& navigators);
     
     /**
      * @brief push peak to result vector (used in centroid mode)

@@ -105,7 +105,7 @@ namespace OpenMS
     return satellites_.begin()->second.getMZ().size();
   }
   
-  void MultiplexFilteredPeak::updateCandidate(const MSExperiment& exp_picked, double mz_shift, std::vector<SplineSpectrum::Navigator>& navigators)
+  void MultiplexFilteredPeak::updateCandidates(const MSExperiment& exp_picked, double mz_shift, std::vector<SplineSpectrum::Navigator>& navigators)
   {
     // construct the set of spline-interpolated satellites for this specific mz_profile
     for (std::multimap<size_t, MultiplexSatellite >::iterator satellite_it = satellites_.begin(); satellite_it != satellites_.end(); ++satellite_it)
