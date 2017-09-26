@@ -902,17 +902,29 @@ public:
    */
   void generateMaps_(std::vector<MultiplexIsotopicPeakPattern> patterns, std::vector<MultiplexFilteredMSExperiment> filter_results, std::vector<std::map<int, GridBasedCluster> > cluster_results, ConsensusMap& consensus_map, FeatureMap& feature_map)
   {
+    bool debug_now(false);
+    
     // loop over peak patterns
     for (unsigned pattern = 0; pattern < patterns.size(); ++pattern)
     {
       //std::cout << "pattern = " << pattern << "    number of clusters = " << cluster_results[pattern].size() << "\n";
       
       // loop over clusters
+      size_t cluster_idx(0);
       for (std::map<int, GridBasedCluster>::const_iterator cluster_it = cluster_results[pattern].begin(); cluster_it != cluster_results[pattern].end(); ++cluster_it)
       {
         GridBasedCluster cluster = cluster_it->second;
         std::vector<int> points = cluster.getPoints();
         
+        //std::cout << "pattern = " << pattern << "    clusters idx = " << cluster_idx << "\n";
+        if (pattern == 8 && cluster_idx == 24)
+        {
+          debug_now = true;
+        }
+        else
+        {
+          debug_now = false;
+        }
         //std::cout << "\n    number of points = " << points.size() << "\n";
         
         // Construct a satellite set for the complete peptide multiplet
@@ -944,12 +956,18 @@ public:
           }
         }
         
-        //std::cout << "    number of satellites = " << satellites.size() << "\n";
+        if (debug_now)
+        {
+          std::cout << "    number of satellites = " << satellites.size() << "\n";
+        }
         
         // determine peptide intensities
         std::vector<double> peptide_intensities = determinePeptideIntensities_(patterns[pattern], satellites);
         
-        //std::cout << "    Peptide Intensities Successfully Determined.  " << peptide_intensities[0] << "  " << peptide_intensities[1] << "\n";
+        if (debug_now)
+        {
+          std::cout << "    Peptide Intensities Successfully Determined.  " << peptide_intensities[0] << "  " << peptide_intensities[1] << "\n";
+        }
         
         // If no reliable peptide intensity can be determined, we do not report the peptide multiplet.
         if (peptide_intensities[0] == -1)
@@ -965,7 +983,10 @@ public:
         // loop over peptides
         for (size_t peptide = 0; (peptide < patterns[pattern].getMassShiftCount() && !abort); ++peptide)
         {
-          //std::cout << "      peptide = " << peptide << "\n";
+          if (debug_now)
+          {
+            std::cout << "      peptide = " << peptide << "\n";
+          }
           
           // coordinates of the peptide feature
           // RT is the intensity-average of all satellites peaks of the mono-isotopic mass trace
@@ -978,6 +999,11 @@ public:
           // loop over isotopes i.e. mass traces of the peptide
           for (size_t isotope = 0; isotope < isotopes_per_peptide_max_; ++isotope)
           {
+            if (debug_now)
+            {
+              std::cout << "        isotope = " << isotope << "\n";
+            }
+            
             // find satellites for this isotope i.e. mass trace
             size_t idx = peptide * isotopes_per_peptide_max_ + isotope;
             std::pair<std::multimap<size_t, MultiplexSatellite >::const_iterator, std::multimap<size_t, MultiplexSatellite >::const_iterator> satellites_isotope;
@@ -1019,6 +1045,12 @@ public:
                 }
                 
                 mass_trace.enlarge(it_rt->getRT(), (*it_mz_profile));
+                
+                if (debug_now)
+                {
+                  std::cout << "          RT (profile) = " << it_rt->getRT() << "    m/z (profile) = " << (*it_mz_profile) << "    intensity (profile) = " << (*it_intensity_profile) << "\n";
+                }
+
               }
    
             }
@@ -1043,9 +1075,22 @@ public:
             }
           }
           
+          if (intensity_sum <= 0)
+          {
+            std::ostringstream strs;
+            strs << intensity_sum;
+            throw Exception::InvalidValue(__FILE__, __LINE__, OPENMS_PRETTY_FUNCTION, "The total intensity of the mono-isotopic mass trace is non-positive. Aborting.", strs.str());
+          }
+          
           rt /= intensity_sum;
           mz /= intensity_sum;
           
+          if (debug_now)
+          {
+            std::cout << "          RT (feature) = " << rt << "    m/z (feature) = " << mz << "    intensity (feature) = " << peptide_intensities[peptide] << "    intensity_sum (feature) = " << intensity_sum << "\n";
+          }
+
+                    
           feature.setRT(rt);
           feature.setMZ(mz);
           feature.setIntensity(peptide_intensities[peptide]);
@@ -1092,7 +1137,8 @@ public:
             feature_map.push_back(*it);
           }
         }
-        
+
+      ++cluster_idx;        
       }
       
     }
