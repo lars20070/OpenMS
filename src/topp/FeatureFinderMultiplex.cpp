@@ -535,6 +535,13 @@ public:
         }
       }
       
+      if (intensity_sum <= 0)
+      {
+        std::ostringstream strs;
+        strs << intensity_sum;
+        throw Exception::InvalidValue(__FILE__, __LINE__, OPENMS_PRETTY_FUNCTION, "The total peptide intensity is not positive. Aborting.", strs.str());
+      }
+      
       rt /= intensity_sum;
       rt_peptide.push_back(rt);
       intensity_peptide.push_back(intensity_sum);
