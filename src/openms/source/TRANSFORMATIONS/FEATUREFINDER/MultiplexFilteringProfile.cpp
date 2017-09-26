@@ -151,8 +151,6 @@ namespace OpenMS
         MSExperiment::ConstIterator it_rt_picked_band_begin = exp_picked_white.RTBegin(rt - rt_band_/2);
         MSExperiment::ConstIterator it_rt_picked_band_end = exp_picked_white.RTEnd(rt + rt_band_/2);
         
-        //std::cout << "RT = " << rt << "\n";
-        
         // loop over mz
         for (MSSpectrum<Peak1D>::ConstIterator it_mz = it_rt_picked->begin(); it_mz != it_rt_picked->end(); ++it_mz)
         {
@@ -171,8 +169,6 @@ namespace OpenMS
           double rt_peak = peak.getRT();
           double mz_peak = peak.getMZ();
           
-          //std::cout << "    m/z (peak) = " << mz_peak << "\n";
-
           std::multimap<size_t, MultiplexSatellite > satellites = peak.getSatellites();
           
           // Arrangement of peaks looks promising. Now scan through the spline fitted profile data around the peak i.e. from peak boundary to peak boundary.
@@ -180,11 +176,12 @@ namespace OpenMS
           {
             // determine m/z shift relative to the centroided peak at which the profile data will be sampled
             double mz_shift = mz_profile - mz_peak;
-            
-            //std::cout << "        m/z shift = " << mz_shift << "\n";
 
             // update the m/z and corresponding spline-interpolated intensities for each satellite of the peak
-            peak.updateCandidates(exp_picked_, mz_shift, navigators);
+            if (!(peak.updateCandidates(exp_picked_, mz_shift, navigators, intensity_cutoff_)))
+            {
+              continue;
+            }
  
             if (!(filterAveragineModel_(pattern, peak)))
             {
@@ -206,8 +203,6 @@ namespace OpenMS
           // If some satellite data points passed all filters, we can add the peak to the filter result.
           if (peak.sizeProfile() > 0)
           {
-            //std::cout << "        size profile = " << peak.sizeProfile() << "\n";
-            
             result.addPeak(peak);
             blacklistPeak_(peak, pattern_idx);
           }
@@ -215,8 +210,6 @@ namespace OpenMS
         }
         
       }
-      
-      //std::cout << "pattern = " << pattern_idx << "    result size = " << result.size() << "\n";
       
       // add results of this pattern to list
       filter_results.push_back(result);
@@ -256,20 +249,6 @@ namespace OpenMS
         throw Exception::InvalidParameter(__FILE__, __LINE__, OPENMS_PRETTY_FUNCTION, "Invalid averagine type.");
     }   
     
-    // debug output variables
-    /*int debug_charge = 2;
-    size_t debug_rt_idx = 39;
-    size_t debug_mz_idx = 130;
-    bool debug_now = ((pattern.getCharge() == debug_charge) && (peak.getRTidx() == debug_rt_idx) && (peak.getMZidx() == debug_mz_idx));*/
-    
-    // debug output
-    /*if (debug_now)
-    {
-      std::cout << "Inside the Averagine Filter.\n";
-    }*/
-    
-    //std::cout << "            Inside the Averagine Filter.    number of satellites = " << peak.getSatellites().size() << "\n";
-  
     // loop over peptides
     for (size_t peptide = 0; peptide < pattern.getMassShiftCount(); ++peptide)
     {
@@ -292,23 +271,13 @@ namespace OpenMS
         {
           ++count;
           sum_intensities += (it->second).getIntensityTemp();
-          
-          //std::cout << "    intensity temp = " << (it->second).getIntensityTemp() << "\n";
         }
-        
-        //std::cout << "peptide = " << peptide << "  isotope = " << isotope << "  number of satellites = " << count << "\n";
         
         if (count > 0)
         {
           intensities_model.push_back(distribution.getContainer()[isotope].second);
           intensities_data.push_back(sum_intensities/count);
         }
-
-        // debug output
-        /*if (debug_now)
-        {
-          std::cout << "    peptide = " << peptide << "    isotope = " << isotope << "    count = " << count << "    average intensity = " << sum_intensities/count << "    averagine intensity = " << distribution.getContainer()[isotope].second << "\n";
-        }*/
         
       }
       
@@ -320,14 +289,6 @@ namespace OpenMS
       double correlation_Pearson = OpenMS::Math::pearsonCorrelationCoefficient(intensities_model.begin(), intensities_model.end(), intensities_data.begin(), intensities_data.end());
       double correlation_Spearman = OpenMS::Math::rankCorrelationCoefficient(intensities_model.begin(), intensities_model.end(), intensities_data.begin(), intensities_data.end());
 
-      // debug output
-      /*if (debug_now)
-      {
-        std::cout << "        Pearson correlation = " << correlation_Pearson << "    rank correlation = " << correlation_Spearman << "\n";
-      }*/
-      
-      //std::cout << "    Pearson correlation = " << correlation_Pearson << "    rank correlation = " << correlation_Spearman << "\n";
-      
       if ((correlation_Pearson < averagine_similarity_) || (correlation_Spearman < averagine_similarity_))
       {
         return false;
@@ -345,18 +306,6 @@ namespace OpenMS
       // filter irrelevant for singlet feature detection
       return true;
     }
-
-    // debug output variables
-    /*int debug_charge = 4;
-    size_t debug_rt_idx = 35;
-    size_t debug_mz_idx = 6;
-    bool debug_now = ((pattern.getCharge() == debug_charge) && (peak.getRTidx() == debug_rt_idx) && (peak.getMZidx() == debug_mz_idx));*/
-    
-    // debug output
-    /*if (debug_now)
-     {
-     std::cout << "Inside the Peptide Correlation Filter.\n";
-     }*/
 
     // We will calculate the correlations between all possible peptide combinations.
     // For example (light, medium), (light, heavy) and (medium, heavy) in the case of triplets.
@@ -414,15 +363,7 @@ namespace OpenMS
         double correlation_Pearson = OpenMS::Math::pearsonCorrelationCoefficient(intensities_1.begin(), intensities_1.end(), intensities_2.begin(), intensities_2.end());
         double correlation_Spearman = OpenMS::Math::rankCorrelationCoefficient(intensities_1.begin(), intensities_1.end(), intensities_2.begin(), intensities_2.end());
         
-        // debug output
-        /*if (debug_now)
-         {
-         std::cout << "        Pearson correlation = " << correlation_Pearson << "    rank correlation = " << correlation_Spearman << "\n";
-         //std::cout << "        Pearson correlation = " << correlation_Pearson << "\n";
-         }*/
-        
         if ((correlation_Pearson < peptide_similarity_) || (correlation_Spearman < peptide_similarity_))
-        //if (correlation_Pearson < peptide_similarity_)
         {
           return false;
         }

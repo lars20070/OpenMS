@@ -117,8 +117,10 @@ namespace OpenMS
      * @brief update the temporary data points in each satellite
      * 
      * These (m/z, intensity) pairs will be used for the subsequent averagine and peptide correlation filters.
+     * 
+     * @return Is this candidate valid, i.e. are all satellite intensities above the cutoff? If FALSE we will skip this candidate.
      */
-    void updateCandidates(const MSExperiment& exp_picked, double mz_shift, std::vector<SplineSpectrum::Navigator>& navigators);
+    bool updateCandidates(const MSExperiment& exp_picked, double mz_shift, std::vector<SplineSpectrum::Navigator>& navigators, double intensity_cutoff);
     
     /**
      * @brief push peak to result vector (used in centroid mode)
