@@ -485,7 +485,7 @@ public:
    *
    * @return vector with intensities for each of the peptides
    */
-  std::vector<double> determinePeptideIntensities_(MultiplexIsotopicPeakPattern& pattern, std::multimap<size_t, MultiplexSatellite >& satellites)
+  std::vector<double> determinePeptideIntensities_(MultiplexIsotopicPeakPattern& pattern, std::multimap<size_t, MultiplexSatellite >& satellites, bool centroided)
   {
     // determine RT shift between the peptides
     // i.e. first determine the RT centre of mass for each peptide
@@ -820,7 +820,7 @@ public:
    */
   
   
-  void generateMaps_(std::vector<MultiplexIsotopicPeakPattern> patterns, std::vector<MultiplexFilteredMSExperiment> filter_results, std::vector<std::map<int, GridBasedCluster> > cluster_results, ConsensusMap& consensus_map, FeatureMap& feature_map)
+  void generateMaps_(std::vector<MultiplexIsotopicPeakPattern> patterns, std::vector<MultiplexFilteredMSExperiment> filter_results, std::vector<std::map<int, GridBasedCluster> > cluster_results, ConsensusMap& consensus_map, FeatureMap& feature_map, bool centroided)
   {
     // loop over peak patterns
     for (unsigned pattern = 0; pattern < patterns.size(); ++pattern)
@@ -862,7 +862,7 @@ public:
         }
         
         // determine peptide intensities
-        std::vector<double> peptide_intensities = determinePeptideIntensities_(patterns[pattern], satellites);
+        std::vector<double> peptide_intensities = determinePeptideIntensities_(patterns[pattern], satellites, centroided);
         
         // If no reliable peptide intensity can be determined, we do not report the peptide multiplet.
         if (peptide_intensities[0] == -1)
@@ -1401,7 +1401,7 @@ private:
       feature_map.setPrimaryMSRunPath(exp_profile_.getPrimaryMSRunPath());
     }
     
-    generateMaps_(patterns, filter_results, cluster_results, consensus_map, feature_map);
+    generateMaps_(patterns, filter_results, cluster_results, consensus_map, feature_map, centroided);
     
     if (out_ != "")
     {
