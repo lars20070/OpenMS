@@ -587,7 +587,7 @@ public:
           std::vector<double> mz_profile_1 = (satellite_it_1->second).getMZ();
           std::vector<double> intensity_profile_1 = (satellite_it_1->second).getIntensity();
           
-          // find corresponding spectra
+          // find corresponding spectrum
           double rt_1 = it_rt_1->getRT();
           double rt_2_target = rt_1 + rt_peptide[peptide] - rt_peptide[0];
           
@@ -607,33 +607,57 @@ public:
 
 
 
-          // Following section only valid for Profile Mode!
-          
-          bool corresponding_satellie_found = false;
+          // find the spectra which bracket <rt_2_target>
+          int rt_idx_2_before = -1;
+          int rt_idx_2_after = -1;
+          double rt_2_before = -1.0;
+          double rt_2_after = -1.0;
           // loop over satellites for this isotope in the second peptide
           for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it_2 = satellites_isotope_2.first; satellite_it_2 != satellites_isotope_2.second; ++satellite_it_2)
           {
-            // find indices of the peak
-            size_t rt_idx_2 = (satellite_it_2->second).getRTidx();
-            size_t mz_idx_2 = (satellite_it_2->second).getMZidx();
+            // find RT of the peak
+            size_t rt_idx_temp = (satellite_it_2->second).getRTidx();
+            MSExperiment::ConstIterator it_rt_temp = exp_centroid_.begin();
+            std::advance(it_rt_temp, rt_idx_temp);
+            double rt_temp = it_rt_temp->getRT();
             
-            if (rt_idx_2 == (it_rt_2 - exp_centroid_.begin()))
+            // a better rt_2_before
+            if ((rt_temp <= rt_2_target) && ((rt_2_before < rt_temp) || (rt_2_before == -1.0)))
             {
-              corresponding_satellie_found = true;
-              break;
+              rt_idx_2_before = rt_idx_temp;
+              rt_2_before = rt_temp;
+            }
+            
+            // a better rt_2_after
+            if ((rt_temp >= rt_2_target) && ((rt_temp < rt_2_after) || (rt_2_after == -1.0)))
+            {
+              rt_idx_2_after = rt_idx_temp;
+              rt_2_after = rt_temp;
             }
           }
           
-          if (corresponding_satellie_found)
+          // No lower bracket found.
+          if ((rt_2_before == -1.0) && (rt_2_after >= 0.0))
           {
-            std::cout << "    FOUND.\n";
+            rt_idx_2_before = rt_idx_2_after;
+            rt_2_before = rt_2_after;
           }
-          else
-          {
-            std::cout << "NOT FOUND.\n";
-          }
-
           
+          // No upper bracket found.
+          if ((rt_2_after == -1.0) && (rt_2_before >= 0.0))
+          {
+            rt_idx_2_after = rt_idx_2_before;
+            rt_2_after = rt_2_before;
+          }
+          
+          // Neither lower nor upper bracket found, i.e. the second satellite set was empty.
+          if ((rt_2_after == -1.0) && (rt_2_before == -1.0))
+          {
+            continue;
+          }
+          
+          std::cout << "rt_2_target = " << rt_2_target << "    rt_2_before = " << rt_2_before << "    rt_2_after = " << rt_2_after << "\n";
+         
           
           
           
@@ -777,14 +801,14 @@ public:
       double intensity2 = ratio_peptide[1] * intensity1;
       
       // DEBUG OUTPUT
-      if (intensity1 <= 0)
+      /*if (intensity1 <= 0)
       {
         std::cout << "peptide intensity 1 = " << intensity1 << "    intensity_peptide[0] = " << intensity_peptide[0] << "    intensity_peptide[1] = " << intensity_peptide[1] << "    ratio_peptide[1] = " << ratio_peptide[1] << "\n";
       }
       if (intensity2 <= 0)
       {
         std::cout << "peptide intensity 2 = " << intensity2 << "    ratio_peptide[1] = " << ratio_peptide[1] << "\n";
-      }
+      }*/
       
       intensity_peptide_corrected.push_back(intensity1);
       intensity_peptide_corrected.push_back(intensity2);
