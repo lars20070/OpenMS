@@ -603,11 +603,53 @@ public:
             }
           }
           
+
+
+
+
+          // Following section only valid for Profile Mode!
+          
+          bool corresponding_satellie_found = false;
+          // loop over satellites for this isotope in the second peptide
+          for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it_2 = satellites_isotope_2.first; satellite_it_2 != satellites_isotope_2.second; ++satellite_it_2)
+          {
+            // find indices of the peak
+            size_t rt_idx_2 = (satellite_it_2->second).getRTidx();
+            size_t mz_idx_2 = (satellite_it_2->second).getMZidx();
+            
+            if (rt_idx_2 == (it_rt_2 - exp_centroid_.begin()))
+            {
+              corresponding_satellie_found = true;
+              break;
+            }
+          }
+          
+          if (corresponding_satellie_found)
+          {
+            std::cout << "    FOUND.\n";
+          }
+          else
+          {
+            std::cout << "NOT FOUND.\n";
+          }
+
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
           // loop over satellites for this isotope in the second peptide
           double rt_earlier = -1;
-          std::vector<double> intensity_earlier;
+          std::vector<double> intensity_earlier(0);
           double rt_later = -1;
-          std::vector<double> intensity_later;
+          std::vector<double> intensity_later(0);
           for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it_2 = satellites_isotope_2.first; satellite_it_2 != satellites_isotope_2.second; ++satellite_it_2)
           {
             // find indices of the peak
@@ -622,7 +664,7 @@ public:
  
             // get profile vectors
             // In the centroid case, a single entry.
-            // In the profile case, all data points from scanning over the peak profile.
+            // In the profile case, all data points from scanning over the peak profile. Note in the profile case the vectors can be of any size including empty.
             std::vector<double> mz_profile_2 = (satellite_it_2->second).getMZ();
             std::vector<double> intensity_profile_2 = (satellite_it_2->second).getIntensity();
            
@@ -639,6 +681,31 @@ public:
             }
             
           }
+          
+          if (rt_earlier == -1 || rt_later == -1)
+          {
+            continue;
+          }
+          
+          
+          
+          
+          // DEBUG OUTPUT
+          //std::cout << "size intensity_profile_1 = " << intensity_profile_1.size() << "    size intensity_earlier = " << intensity_earlier.size() << "    size intensity_later = " << intensity_later.size() << "\n";
+          
+          /*if (intensity_profile_1.size() == intensity_earlier.size())
+          {
+            //std::cout << "SAME.    size (profile 1) = " << intensity_profile_1.size() << "    size (earlier) = " << intensity_earlier.size() << "\n";
+          }
+          else
+          {
+            //std::cout << "    DIFFERENT.    size (profile 1) = " << intensity_profile_1.size() << "    size (earlier) = " << intensity_earlier.size() << "\n";
+            std::cout << "    DIFFERENT.    difference = " << std::abs((int) intensity_profile_1.size() - (int) intensity_earlier.size()) << "\n";
+          }*/
+          
+          
+          
+          
           
           // Our target lies on or between two satellites of the 'other' peptide.
           if ((rt_earlier > 0) && (rt_later > 0))
@@ -666,6 +733,8 @@ public:
             intensities_light.insert(intensities_light.end(), intensity_profile_1.begin(), intensity_profile_1.end());
             intensities_other.insert(intensities_other.end(), intensity_other.begin(), intensity_other.end());
           }
+        
+          // END OF THE LINE // END OF THE LINE // END OF THE LINE // END OF THE LINE // END OF THE LINE // END OF THE LINE // 
         }
         
       }
@@ -676,10 +745,21 @@ public:
         return intensity_peptide;
       }
       
+      /*if (intensities_light.size() != intensities_other.size())
+      {
+        std::cout << "Vector size are not equal.      intensities_light.size() = " << intensities_light.size() << "  intensities_other.size() = " << intensities_other.size() << "\n";
+      }*/
+      
       // determine ratios through linear regression of all corresponding intensities
       LinearRegressionWithoutIntercept linreg;
       linreg.addData(intensities_light, intensities_other);
       double slope = linreg.getSlope();
+      
+      // DEBUG OUTPUT
+      /*if (slope < 0)
+      {
+        std::cout << "slope = " << slope << "    size (intensity light) = " << intensities_light.size() << "    size (intensity other) = " << intensities_other.size() << "\n";
+      }*/
       
       ratio_peptide.push_back(slope);
     }
@@ -695,6 +775,17 @@ public:
     {
       double intensity1 = (intensity_peptide[0] + ratio_peptide[1] * intensity_peptide[1]) / (1 + ratio_peptide[1] * ratio_peptide[1]);
       double intensity2 = ratio_peptide[1] * intensity1;
+      
+      // DEBUG OUTPUT
+      if (intensity1 <= 0)
+      {
+        std::cout << "peptide intensity 1 = " << intensity1 << "    intensity_peptide[0] = " << intensity_peptide[0] << "    intensity_peptide[1] = " << intensity_peptide[1] << "    ratio_peptide[1] = " << ratio_peptide[1] << "\n";
+      }
+      if (intensity2 <= 0)
+      {
+        std::cout << "peptide intensity 2 = " << intensity2 << "    ratio_peptide[1] = " << ratio_peptide[1] << "\n";
+      }
+      
       intensity_peptide_corrected.push_back(intensity1);
       intensity_peptide_corrected.push_back(intensity2);
     }
