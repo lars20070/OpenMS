@@ -682,18 +682,15 @@ public:
           // fill intensity vector (profile mode)
           else
           {
-            std::cout << "mz_profile_1 size = " << mz_profile_1.size() << "    intensity_profile_1 size = " << intensity_profile_1.size() << "\n";
-            
             // loop over m/z around the first satellite
             for (int i = 0; i < mz_profile_1.size(); ++i)
             {
-              std::cout << "    m/z = " << mz_profile_1[i] << "    m/z difference = " << (mz_profile_1[i] - mz_1) << "    intensity = " << intensity_profile_1[i] << "\n";
-              
               double intensity_before_temp = navigators_[rt_idx_2_before].eval(mz_profile_1[i] - mz_1 + mz_2_before);
               double intensity_after_temp = navigators_[rt_idx_2_after].eval(mz_profile_1[i] - mz_1 + mz_2_after);
               
               if ((intensity_before_temp > intensity_cutoff_) && (intensity_after_temp > intensity_cutoff_))
               {
+                intensities_light.push_back(intensity_profile_1[i]);
                 if (rt_idx_2_before == rt_idx_2_after)
                 {
                   intensities_other.push_back(intensity_before_temp);
@@ -706,106 +703,6 @@ public:
               }
             }
           }
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          // loop over satellites for this isotope in the second peptide
-          /*double rt_earlier = -1;
-          std::vector<double> intensity_earlier(0);
-          double rt_later = -1;
-          std::vector<double> intensity_later(0);
-          for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it_2 = satellites_isotope_2.first; satellite_it_2 != satellites_isotope_2.second; ++satellite_it_2)
-          {
-            // find indices of the peak
-            size_t rt_idx_2 = (satellite_it_2->second).getRTidx();
-            size_t mz_idx_2 = (satellite_it_2->second).getMZidx();
-            
-            // find peak itself
-            MSExperiment::ConstIterator it_rt_2 = exp_centroid_.begin();
-            std::advance(it_rt_2, rt_idx_2);
-            MSSpectrum<Peak1D>::ConstIterator it_mz_2 = it_rt_2->begin();
-            std::advance(it_mz_2, mz_idx_2);
- 
-            // get profile vectors
-            // In the centroid case, a single entry.
-            // In the profile case, all data points from scanning over the peak profile. Note in the profile case the vectors can be of any size including empty.
-            std::vector<double> mz_profile_2 = (satellite_it_2->second).getMZ();
-            std::vector<double> intensity_profile_2 = (satellite_it_2->second).getIntensity();
-           
-            if (it_rt_2->getRT() <= rt_2 && (std::abs(it_rt_2->getRT() - rt_2) < std::abs(rt_earlier - rt_2)))
-            {
-              rt_earlier = it_rt_2->getRT();
-              intensity_earlier = intensity_profile_2;
-            }
-            
-            if (it_rt_2->getRT() >= rt_2 && (std::abs(it_rt_2->getRT() - rt_2) < std::abs(rt_later - rt_2)))
-            {
-              rt_later = it_rt_2->getRT();
-              intensity_later = intensity_profile_2;
-            }
-            
-          }
-          
-          if (rt_earlier == -1 || rt_later == -1)
-          {
-            continue;
-          }*/
-          
-          
-          
-          
-          // DEBUG OUTPUT
-          //std::cout << "size intensity_profile_1 = " << intensity_profile_1.size() << "    size intensity_earlier = " << intensity_earlier.size() << "    size intensity_later = " << intensity_later.size() << "\n";
-          
-          /*if (intensity_profile_1.size() == intensity_earlier.size())
-          {
-            //std::cout << "SAME.    size (profile 1) = " << intensity_profile_1.size() << "    size (earlier) = " << intensity_earlier.size() << "\n";
-          }
-          else
-          {
-            //std::cout << "    DIFFERENT.    size (profile 1) = " << intensity_profile_1.size() << "    size (earlier) = " << intensity_earlier.size() << "\n";
-            std::cout << "    DIFFERENT.    difference = " << std::abs((int) intensity_profile_1.size() - (int) intensity_earlier.size()) << "\n";
-          }*/
-          
-          
-          
-          
-          
-          // Our target lies on or between two satellites of the 'other' peptide.
-          /*if ((rt_earlier > 0) && (rt_later > 0))
-          {
-            // linearly interpolated intensity
-            // TODO: Maybe linear interpolation between spectra does more bad than good. Perhaps simply pick the nearest spectrum?
-            std::vector<double> intensity_other;
-            if ((rt_2 == rt_earlier) || (rt_later == rt_earlier))
-            {
-              intensity_other = intensity_earlier;
-            }
-            else
-            {
-              // loop simultaneously over earlier and later intensity vectors
-              std::vector<double>::const_iterator it_earlier;
-              std::vector<double>::const_iterator it_later;
-              for (it_earlier = intensity_earlier.begin(), it_later = intensity_later.begin();
-                   it_earlier != intensity_earlier.end(), it_later != intensity_later.end();
-                   ++it_earlier, ++it_later)
-              {
-                intensity_other.push_back(*it_earlier + (*it_later - *it_earlier)*(rt_2 - rt_earlier)/(rt_later - rt_earlier));
-              }
-            }
-            
-            intensities_light.insert(intensities_light.end(), intensity_profile_1.begin(), intensity_profile_1.end());
-            intensities_other.insert(intensities_other.end(), intensity_other.begin(), intensity_other.end());
-          }*/
-        
-          // END OF THE LINE // END OF THE LINE // END OF THE LINE // END OF THE LINE // END OF THE LINE // END OF THE LINE // 
         }
         
       }
@@ -816,21 +713,18 @@ public:
         return intensity_peptide;
       }
       
-      /*if (intensities_light.size() != intensities_other.size())
-      {
-        std::cout << "Vector size are not equal.      intensities_light.size() = " << intensities_light.size() << "  intensities_other.size() = " << intensities_other.size() << "\n";
-      }*/
-      
       // determine ratios through linear regression of all corresponding intensities
       LinearRegressionWithoutIntercept linreg;
+      if (intensities_light.size() != intensities_other.size())
+      {
+        throw Exception::InvalidValue(__FILE__, __LINE__, OPENMS_PRETTY_FUNCTION, "The two intensity vectors are not of equal size. Aborting.", "");
+      }
       linreg.addData(intensities_light, intensities_other);
       double slope = linreg.getSlope();
-      
-      // DEBUG OUTPUT
-      /*if (slope < 0)
+      if (slope < 0)
       {
-        std::cout << "slope = " << slope << "    size (intensity light) = " << intensities_light.size() << "    size (intensity other) = " << intensities_other.size() << "\n";
-      }*/
+        throw Exception::InvalidValue(__FILE__, __LINE__, OPENMS_PRETTY_FUNCTION, "The slope between two peptide intensities is negative. Aborting.", "");
+      }
       
       ratio_peptide.push_back(slope);
     }
