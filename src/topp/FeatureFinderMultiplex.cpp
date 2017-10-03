@@ -568,6 +568,12 @@ public:
         std::pair<std::multimap<size_t, MultiplexSatellite >::const_iterator, std::multimap<size_t, MultiplexSatellite >::const_iterator> satellites_isotope_2;
         satellites_isotope_2 = satellites.equal_range(peptide * isotopes_per_peptide_max_ + isotope);
         
+        // if the satellite set for either isotope is empty, we can move on
+        if ((satellites_isotope_1.first == satellites_isotope_1.second) || (satellites_isotope_2.first == satellites_isotope_2.second))
+        {
+          continue;
+        }
+        
         // loop over satellites for this isotope in the light peptide
         for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it_1 = satellites_isotope_1.first; satellite_it_1 != satellites_isotope_1.second; ++satellite_it_1)
         {
@@ -591,7 +597,8 @@ public:
           double rt_1 = it_rt_1->getRT();
           double rt_2_target = rt_1 + rt_peptide[peptide] - rt_peptide[0];
           
-          MSExperiment::ConstIterator it_rt_2 = exp_centroid_.RTBegin(rt_2_target);
+          // Clostest spectrum not needed any longer.
+          /*MSExperiment::ConstIterator it_rt_2 = exp_centroid_.RTBegin(rt_2_target);
           double rt_2 = it_rt_2->getRT();
           // The previous spectrum might be a better match for the target RT <rt_2_target>.
           if (it_rt_2 != exp_centroid_.begin())
@@ -601,17 +608,17 @@ public:
               --it_rt_2;
               rt_2 = it_rt_2->getRT();
             }
-          }
-          
-
-
-
+          }*/
 
           // find the spectra which bracket <rt_2_target>
           int rt_idx_2_before = -1;
           int rt_idx_2_after = -1;
           double rt_2_before = -1.0;
           double rt_2_after = -1.0;
+          std::vector<double> mz_profile_2_before;
+          std::vector<double> mz_profile_2_after;
+          std::vector<double> intensity_profile_2_before;
+          std::vector<double> intensity_profile_2_after;
           // loop over satellites for this isotope in the second peptide
           for (std::multimap<size_t, MultiplexSatellite >::const_iterator satellite_it_2 = satellites_isotope_2.first; satellite_it_2 != satellites_isotope_2.second; ++satellite_it_2)
           {
@@ -626,6 +633,8 @@ public:
             {
               rt_idx_2_before = rt_idx_temp;
               rt_2_before = rt_temp;
+              mz_profile_2_before = (satellite_it_2->second).getMZ();
+              intensity_profile_2_before = (satellite_it_2->second).getMZ();
             }
             
             // a better rt_2_after
@@ -633,32 +642,49 @@ public:
             {
               rt_idx_2_after = rt_idx_temp;
               rt_2_after = rt_temp;
+              mz_profile_2_after = (satellite_it_2->second).getMZ();
+              intensity_profile_2_after = (satellite_it_2->second).getMZ();
             }
           }
           
-          // No lower bracket found.
+          // No lower bracket found. (No satellites for the exact RT shift. But let us use this satellite as next best fit.)
           if ((rt_2_before == -1.0) && (rt_2_after >= 0.0))
           {
             rt_idx_2_before = rt_idx_2_after;
             rt_2_before = rt_2_after;
+            mz_profile_2_before = mz_profile_2_after;
+            intensity_profile_2_before = intensity_profile_2_after;
           }
           
-          // No upper bracket found.
+          // No upper bracket found. (No satellites for the exact RT shift. But let us use this satellite as next best fit.)
           if ((rt_2_after == -1.0) && (rt_2_before >= 0.0))
           {
             rt_idx_2_after = rt_idx_2_before;
             rt_2_after = rt_2_before;
+            mz_profile_2_after = mz_profile_2_before;
+            intensity_profile_2_after = intensity_profile_2_before;
           }
           
-          // Neither lower nor upper bracket found, i.e. the second satellite set was empty.
-          if ((rt_2_after == -1.0) && (rt_2_before == -1.0))
+          // fill intensity vector (centroid mode)
+          if (centroided)
           {
-            continue;
+            intensities_light.push_back(intensity_profile_1[0]);
+            if (rt_idx_2_before == rt_idx_2_after)
+            {
+              intensities_other.push_back(intensity_profile_2_before[0]);
+            }
+            else
+            {
+              // There is no spectrum at rt_2_target. So we interpolate linearly between spactra.
+              intensities_other.push_back(intensity_profile_2_before[0] + (intensity_profile_2_after[0] - intensity_profile_2_before[0]) * (rt_2_target - rt_2_before) / (rt_2_after - rt_2_before));
+            }
           }
-          
-          std::cout << "rt_2_target = " << rt_2_target << "    rt_2_before = " << rt_2_before << "    rt_2_after = " << rt_2_after << "\n";
-         
-          
+          // fill intensity vector (profile mode)
+          else
+          {
+            // loop over m/z around the first satellite
+            
+          }
           
           
           
@@ -670,7 +696,7 @@ public:
           
           
           // loop over satellites for this isotope in the second peptide
-          double rt_earlier = -1;
+          /*double rt_earlier = -1;
           std::vector<double> intensity_earlier(0);
           double rt_later = -1;
           std::vector<double> intensity_later(0);
@@ -709,7 +735,7 @@ public:
           if (rt_earlier == -1 || rt_later == -1)
           {
             continue;
-          }
+          }*/
           
           
           
@@ -732,7 +758,7 @@ public:
           
           
           // Our target lies on or between two satellites of the 'other' peptide.
-          if ((rt_earlier > 0) && (rt_later > 0))
+          /*if ((rt_earlier > 0) && (rt_later > 0))
           {
             // linearly interpolated intensity
             // TODO: Maybe linear interpolation between spectra does more bad than good. Perhaps simply pick the nearest spectrum?
@@ -756,7 +782,7 @@ public:
             
             intensities_light.insert(intensities_light.end(), intensity_profile_1.begin(), intensity_profile_1.end());
             intensities_other.insert(intensities_other.end(), intensity_other.begin(), intensity_other.end());
-          }
+          }*/
         
           // END OF THE LINE // END OF THE LINE // END OF THE LINE // END OF THE LINE // END OF THE LINE // END OF THE LINE // 
         }
