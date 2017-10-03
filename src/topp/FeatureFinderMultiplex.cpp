@@ -177,6 +177,8 @@ private:
   // experimental data
   MSExperiment exp_profile_;
   MSExperiment exp_centroid_;
+  std::vector<SplineSpectrum> exp_spline_profile_;
+  std::vector<SplineSpectrum::Navigator> navigators_;
   
 public:
   TOPPFeatureFinderMultiplex() :
@@ -594,22 +596,10 @@ public:
           std::vector<double> intensity_profile_1 = (satellite_it_1->second).getIntensity();
           
           // find corresponding spectrum
+          double mz_1 = it_mz_1->getMZ();
           double rt_1 = it_rt_1->getRT();
           double rt_2_target = rt_1 + rt_peptide[peptide] - rt_peptide[0];
           
-          // Clostest spectrum not needed any longer.
-          /*MSExperiment::ConstIterator it_rt_2 = exp_centroid_.RTBegin(rt_2_target);
-          double rt_2 = it_rt_2->getRT();
-          // The previous spectrum might be a better match for the target RT <rt_2_target>.
-          if (it_rt_2 != exp_centroid_.begin())
-          {
-            if (std::abs((it_rt_2 - 1)->getRT() - rt_2_target) < std::abs(rt_2 - rt_2_target))
-            {
-              --it_rt_2;
-              rt_2 = it_rt_2->getRT();
-            }
-          }*/
-
           // find the spectra which bracket <rt_2_target>
           int rt_idx_2_before = -1;
           int rt_idx_2_after = -1;
@@ -682,7 +672,15 @@ public:
           // fill intensity vector (profile mode)
           else
           {
+            std::cout << "mz_profile_1 size = " << mz_profile_1.size() << "    intensity_profile_1 size = " << intensity_profile_1.size() << "\n";
+            
             // loop over m/z around the first satellite
+            for (int i = 0; i < mz_profile_1.size(); ++i)
+            {
+              std::cout << "    m/z = " << mz_profile_1[i] << "    m/z difference = " << (mz_profile_1[i] - mz_1) << "    intensity = " << intensity_profile_1[i] << "\n";
+              
+              
+            }
             
           }
           
@@ -1363,6 +1361,14 @@ private:
     else
     {
       exp_profile_ = exp;
+      
+      // spline interpolate the profile data
+      for (MSExperiment::Iterator it = exp_profile_.begin(); it < exp_profile_.end(); ++it)
+      {
+        SplineSpectrum spline(*it);
+        exp_spline_profile_.push_back(spline);
+        navigators_.push_back(spline.getNavigator());
+      }
     }
     // TODO: Explicitly destruct <exp>?
 
