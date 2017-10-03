@@ -605,6 +605,8 @@ public:
           int rt_idx_2_after = -1;
           double rt_2_before = -1.0;
           double rt_2_after = -1.0;
+          double mz_2_before = -1.0;
+          double mz_2_after = -1.0;
           std::vector<double> mz_profile_2_before;
           std::vector<double> mz_profile_2_after;
           std::vector<double> intensity_profile_2_before;
@@ -614,15 +616,20 @@ public:
           {
             // find RT of the peak
             size_t rt_idx_temp = (satellite_it_2->second).getRTidx();
+            size_t mz_idx_temp = (satellite_it_2->second).getMZidx();
             MSExperiment::ConstIterator it_rt_temp = exp_centroid_.begin();
             std::advance(it_rt_temp, rt_idx_temp);
+            MSSpectrum<Peak1D>::ConstIterator it_mz_temp = it_rt_temp->begin();
+            std::advance(it_mz_temp, mz_idx_temp);
             double rt_temp = it_rt_temp->getRT();
+            double mz_temp = it_mz_temp->getMZ();
             
             // a better rt_2_before
             if ((rt_temp <= rt_2_target) && ((rt_2_before < rt_temp) || (rt_2_before == -1.0)))
             {
               rt_idx_2_before = rt_idx_temp;
               rt_2_before = rt_temp;
+              mz_2_before = mz_temp;
               mz_profile_2_before = (satellite_it_2->second).getMZ();
               intensity_profile_2_before = (satellite_it_2->second).getMZ();
             }
@@ -632,6 +639,7 @@ public:
             {
               rt_idx_2_after = rt_idx_temp;
               rt_2_after = rt_temp;
+              mz_2_after = mz_temp;
               mz_profile_2_after = (satellite_it_2->second).getMZ();
               intensity_profile_2_after = (satellite_it_2->second).getMZ();
             }
@@ -642,6 +650,7 @@ public:
           {
             rt_idx_2_before = rt_idx_2_after;
             rt_2_before = rt_2_after;
+            mz_2_before = mz_2_after;
             mz_profile_2_before = mz_profile_2_after;
             intensity_profile_2_before = intensity_profile_2_after;
           }
@@ -651,6 +660,7 @@ public:
           {
             rt_idx_2_after = rt_idx_2_before;
             rt_2_after = rt_2_before;
+            mz_2_after = mz_2_before;
             mz_profile_2_after = mz_profile_2_before;
             intensity_profile_2_after = intensity_profile_2_before;
           }
@@ -679,9 +689,22 @@ public:
             {
               std::cout << "    m/z = " << mz_profile_1[i] << "    m/z difference = " << (mz_profile_1[i] - mz_1) << "    intensity = " << intensity_profile_1[i] << "\n";
               
+              double intensity_before_temp = navigators_[rt_idx_2_before].eval(mz_profile_1[i] - mz_1 + mz_2_before);
+              double intensity_after_temp = navigators_[rt_idx_2_after].eval(mz_profile_1[i] - mz_1 + mz_2_after);
               
+              if ((intensity_before_temp > intensity_cutoff_) && (intensity_after_temp > intensity_cutoff_))
+              {
+                if (rt_idx_2_before == rt_idx_2_after)
+                {
+                  intensities_other.push_back(intensity_before_temp);
+                }
+                else
+                {
+                  // There is no spectrum at rt_2_target. So we interpolate linearly between spactra.
+                  intensities_other.push_back(intensity_before_temp + (intensity_after_temp - intensity_before_temp) * (rt_2_target - rt_2_before) / (rt_2_after - rt_2_before));
+                }
+              }
             }
-            
           }
           
           
