@@ -190,33 +190,6 @@ protected:
     void ungreyBlacklist_();
 
     /**
-     * @brief check if the satellite peaks conform with the averagine model
-     *
-     * Check if the intensities of the satellite peaks correlate with the peak intensities
-     * of the averagine model. We check both Pearson and Spearman rank correlation.
-     *
-     * @param pattern    m/z pattern to search for
-     * @param peak    peak with set of satellite peaks
-     *
-     * @return boolean if this filter was passed i.e. the correlation coefficient is greater than <averagine_similarity_>
-     */
-    bool filterAveragineModel_(const MultiplexIsotopicPeakPattern& pattern, const MultiplexFilteredPeak& peak) const;
-    
-    /**
-     * @brief check if corresponding satellite peaks of different peptides show a good correlation
-     *
-     * Different peptides in the same multiplet have the same amino acid sequence and should therefore exhibit very similar
-     * isotope distributions. The filter checks if satellite peaks corresponding to different isotopes in different peptide
-     * features show a strong correlation. The filter is of course ignored for singlet feature detection.
-     *
-     * @param pattern    m/z pattern to search for
-     * @param peak    peak with set of satellite peaks
-     *
-     * @return boolean if this filter was passed i.e. the correlation coefficient is greater than <peptide_similarity_>
-     */
-    bool filterPeptideCorrelation_(const MultiplexIsotopicPeakPattern& pattern, const MultiplexFilteredPeak& peak) const;
-
-    /**
     * @brief centroided experimental data
     */
     MSExperiment exp_picked_;
