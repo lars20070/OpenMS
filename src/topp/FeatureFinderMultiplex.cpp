@@ -741,16 +741,6 @@ public:
       double intensity1 = (intensity_peptide[0] + ratio_peptide[1] * intensity_peptide[1]) / (1 + ratio_peptide[1] * ratio_peptide[1]);
       double intensity2 = ratio_peptide[1] * intensity1;
       
-      // DEBUG OUTPUT
-      /*if (intensity1 <= 0)
-      {
-        std::cout << "peptide intensity 1 = " << intensity1 << "    intensity_peptide[0] = " << intensity_peptide[0] << "    intensity_peptide[1] = " << intensity_peptide[1] << "    ratio_peptide[1] = " << ratio_peptide[1] << "\n";
-      }
-      if (intensity2 <= 0)
-      {
-        std::cout << "peptide intensity 2 = " << intensity2 << "    ratio_peptide[1] = " << ratio_peptide[1] << "\n";
-      }*/
-      
       intensity_peptide_corrected.push_back(intensity1);
       intensity_peptide_corrected.push_back(intensity2);
     }

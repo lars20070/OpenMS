@@ -534,13 +534,13 @@ namespace OpenMS
     }
     
     // debug output variables
-    int debug_charge = 4;
+    /*int debug_charge = 4;
     size_t debug_rt_idx = 35;
     size_t debug_mz_idx = 6;
     bool debug_now = ((pattern.getCharge() == debug_charge) && (peak.getRTidx() == debug_rt_idx) && (peak.getMZidx() == debug_mz_idx));
     
     // debug output
-    /*if (debug_now)
+    if (debug_now)
     {
       std::cout << "Inside the Peptide Correlation Filter.\n";
     }*/
