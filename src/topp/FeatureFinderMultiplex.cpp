@@ -548,7 +548,7 @@ public:
       rt_peptide.push_back(rt);
       intensity_peptide.push_back(intensity_sum);
     }
-    
+        
     // determine the fold changes between the lightest peptide and the remaining ones
     // TODO Replace the lightest peptide by the highest intensity peptide in the multiplet
     std::vector<double> ratio_peptide;
@@ -631,7 +631,7 @@ public:
               rt_2_before = rt_temp;
               mz_2_before = mz_temp;
               mz_profile_2_before = (satellite_it_2->second).getMZ();
-              intensity_profile_2_before = (satellite_it_2->second).getMZ();
+              intensity_profile_2_before = (satellite_it_2->second).getIntensity();
             }
             
             // a better rt_2_after
@@ -641,7 +641,7 @@ public:
               rt_2_after = rt_temp;
               mz_2_after = mz_temp;
               mz_profile_2_after = (satellite_it_2->second).getMZ();
-              intensity_profile_2_after = (satellite_it_2->second).getMZ();
+              intensity_profile_2_after = (satellite_it_2->second).getIntensity();
             }
           }
           
@@ -712,7 +712,7 @@ public:
       {
         return intensity_peptide;
       }
-      
+  
       // determine ratios through linear regression of all corresponding intensities
       LinearRegressionWithoutIntercept linreg;
       if (intensities_light.size() != intensities_other.size())
