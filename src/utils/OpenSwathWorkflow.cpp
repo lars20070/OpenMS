@@ -399,7 +399,7 @@ protected:
   void registerOptionsAndFlags_()
   {
     registerInputFileList_("in", "<files>", StringList(), "Input files separated by blank");
-    setValidFormats_("in", ListUtils::create<String>("mzML,mzXML"));
+    setValidFormats_("in", ListUtils::create<String>("mzML,mzXML,sqMass"));
 
     registerInputFile_("tr", "<file>", "", "transition file ('TraML','tsv','pqp')");
     setValidFormats_("tr", ListUtils::create<String>("traML,tsv,pqp"));
@@ -467,7 +467,8 @@ protected:
     registerSubsection_("Scoring", "Scoring parameters section");
     registerSubsection_("Library", "Library parameters section");
 
-    registerSubsection_("outlierDetection", "Parameters for the outlierDetection for iRT petides. Outlier detection can be done iteratively (by default) which removes one outlier per iteration or using the RANSAC algorithm.");
+    registerSubsection_("RTNormalization", "Parameters for the RTNormalization for iRT petides. This specifies how the RT alignment is performed and how outlier detection is applied. Outlier detection can be done iteratively (by default) which removes one outlier per iteration or using the RANSAC algorithm.");
+    registerSubsection_("Debugging", "Debugging");
   }
 
   Param getSubsectionDefaults_(const String& name) const
@@ -499,7 +500,7 @@ protected:
       feature_finder_param.setValue("TransitionGroupPicker:PeakPickerMRM:method", "corrected");
       feature_finder_param.setValue("TransitionGroupPicker:PeakPickerMRM:signal_to_noise", 0.1);
       feature_finder_param.setValue("TransitionGroupPicker:PeakPickerMRM:gauss_width", 30.0);
-      feature_finder_param.setValue("uis_threshold_sn",-1);
+      feature_finder_param.setValue("uis_threshold_sn",0);
       feature_finder_param.setValue("uis_threshold_peak_area",0);
       feature_finder_param.remove("TransitionGroupPicker:PeakPickerMRM:sn_win_len");
       feature_finder_param.remove("TransitionGroupPicker:PeakPickerMRM:sn_bin_count");
@@ -519,9 +520,18 @@ protected:
       feature_finder_param.remove("EMGScoring:statistics:variance");
       return feature_finder_param;
     }
-    else if (name == "outlierDetection")
+    else if (name == "RTNormalization")
     {
       Param p;
+
+      p.setValue("alignmentMethod", "linear", "How to perform the alignment to the normalized RT space using anchor points. 'linear': perform linear regression (for few anchor points). 'interpolated': Interpolate between anchor points (for few, noise-free anchor points). 'lowess' Use local regression (for many, noisy anchor points). 'b_spline' use b splines for smoothing.");
+      p.setValidStrings("alignmentMethod", ListUtils::create<String>("linear,interpolated,lowess,b_spline"));
+      p.setValue("lowess:span", 2.0/3, "Span parameter for lowess");
+      p.setMinFloat("lowess:span", 0.0);
+      p.setMaxFloat("lowess:span", 1.0);
+      p.setValue("b_spline:num_nodes", 5, "Number of nodes for b spline");
+      p.setMinInt("b_spline:num_nodes", 0);
+
       p.setValue("outlierMethod", "iter_residual", "Which outlier detection method to use (valid: 'iter_residual', 'iter_jackknife', 'ransac', 'none'). Iterative methods remove one outlier at a time. Jackknife approach optimizes for maximum r-squared improvement while 'iter_residual' removes the datapoint with the largest residual error (removal by residual is computationally cheaper, use this with lots of peptides).");
       p.setValidStrings("outlierMethod", ListUtils::create<String>("iter_residual,iter_jackknife,ransac,none"));
 
@@ -540,6 +550,15 @@ protected:
       p.setValue("NrRTBins", 10, "Number of RT bins to use to compute coverage. This option should be used to ensure that there is a complete coverage of the RT space (this should detect cases where only a part of the RT gradient is actually covered by normalization peptides)");
       p.setValue("MinPeptidesPerBin", 1, "Minimal number of peptides that are required for a bin to counted as 'covered'");
       p.setValue("MinBinsFilled", 8, "Minimal number of bins required to be covered");
+      return p;
+    }
+    else if (name == "Debugging")
+    {
+      Param p;
+      p.setValue("irt_mzml", "", "Chromatogram mzML containing the iRT peptides");
+      // p.setValidFormats_("irt_mzml", ListUtils::create<String>("mzML"));
+      p.setValue("irt_trafo", "", "Transformation file for RT transform");
+      // p.setValidFormats_("irt_trafo", ListUtils::create<String>("trafoXML"));
       return p;
     }
     else if (name == "Library")
@@ -577,6 +596,10 @@ protected:
       {
         swath_maps = swath_file.loadMzXML(file_list[0], tmp, exp_meta, readoptions);
       }
+      else if (in_file_type == FileTypes::SQMASS || file_list[0].suffix(6).toLower() == "sqmass")
+      {
+        swath_maps = swath_file.loadSqMass(file_list[0], exp_meta);
+      }
       else
       {
         throw Exception::IllegalArgument(__FILE__, __LINE__, OPENMS_PRETTY_FUNCTION,
@@ -610,7 +633,8 @@ protected:
   TransformationDescription loadTrafoFile(String trafo_in, String irt_tr_file,
     std::vector< OpenSwath::SwathMap > & swath_maps, double min_rsq, double min_coverage,
     const Param& feature_finder_param, const ChromExtractParams& cp_irt,
-    const Param& irt_detection_param, const String & mz_correction_function, Size debug_level, bool sonar)
+    const Param& irt_detection_param, const String & mz_correction_function,
+    Size debug_level, bool sonar, bool load_into_memory, const String& debug_output)
   {
     TransformationDescription trafo_rtnorm;
     if (!trafo_in.empty())
@@ -620,7 +644,9 @@ protected:
       trafoxml.load(trafo_in, trafo_rtnorm, false);
       Param model_params = getParam_().copy("model:", true);
       model_params.setValue("symmetric_regression", "false");
-      String model_type = "linear";
+      model_params.setValue("span", irt_detection_param.getValue("lowess:span"));
+      model_params.setValue("num_nodes", irt_detection_param.getValue("b_spline:num_nodes"));
+      String model_type = irt_detection_param.getValue("alignmentMethod");
       trafo_rtnorm.fitModel(model_type, model_params);
     }
     else if (!irt_tr_file.empty())
@@ -635,7 +661,13 @@ protected:
       OpenSwathRetentionTimeNormalization wf;
       wf.setLogType(log_type_);
       trafo_rtnorm = wf.performRTNormalization(irt_transitions, swath_maps, min_rsq, min_coverage,
-          feature_finder_param, cp_irt, irt_detection_param, mz_correction_function, debug_level, sonar);
+          feature_finder_param, cp_irt, irt_detection_param, mz_correction_function, debug_level, sonar, load_into_memory);
+
+      if (!debug_output.empty())
+      {
+        TransformationXMLFile trafoxml;
+        trafoxml.store(debug_output, trafo_rtnorm);
+      }
     }
     return trafo_rtnorm;
   }
@@ -648,7 +680,7 @@ protected:
     StringList file_list = getStringList_("in");
     String tr_file = getStringOption_("tr");
 
-    Param irt_detection_param = getParam_().copy("outlierDetection:", true);
+    Param irt_detection_param = getParam_().copy("RTNormalization:", true);
 
     //tr_file input file type
     FileHandler fh_tr_type;
@@ -696,6 +728,8 @@ protected:
     double min_rsq = getDoubleOption_("min_rsq");
     double min_coverage = getDoubleOption_("min_coverage");
 
+    Param debug_params = getParam_().copy("Debugging:", true);
+
     String readoptions = getStringOption_("readOptions");
     String mz_correction_function = getStringOption_("mz_correction_function");
     String tmp = getStringOption_("tempDirectory");
@@ -705,6 +739,7 @@ protected:
     ///////////////////////////////////
 
     bool load_into_memory = false;
+    bool is_sqmass_input  = (file_list[0].suffix(6).toLower() == "sqmass");
     if (readoptions == "cacheWorkingInMemory")
     {
       readoptions = "cache";
@@ -714,6 +749,11 @@ protected:
     {
       readoptions = "normal";
       load_into_memory = true;
+    }
+
+    if (is_sqmass_input && !load_into_memory)
+    {
+      std::cout << "When using sqMass input files, it is highly recommended to use the workingInMemory option as otherwise data access will be very slow." << std::endl;
     }
 
     if (trafo_in.empty() && irt_tr_file.empty())
@@ -897,10 +937,11 @@ protected:
     ///////////////////////////////////
     // Get the transformation information (using iRT peptides)
     ///////////////////////////////////
+    String debug_output = debug_params.getValue("irt_trafo");
     TransformationDescription trafo_rtnorm = loadTrafoFile(trafo_in,
         irt_tr_file, swath_maps, min_rsq, min_coverage, feature_finder_param,
         cp_irt, irt_detection_param, mz_correction_function, debug_level,
-        sonar);
+        sonar, load_into_memory, debug_output);
 
     ///////////////////////////////////
     // Set up chromatogram output
@@ -911,7 +952,9 @@ protected:
     {
       if (out_chrom.hasSuffix(".sqMass"))
       {
-        chromatogramConsumer = new MSDataSqlConsumer(out_chrom);
+        bool full_meta = false; // can lead to very large files in memory
+        bool lossy_compression = true;
+        chromatogramConsumer = new MSDataSqlConsumer(out_chrom, 500, full_meta, lossy_compression);
       }
       else
       {

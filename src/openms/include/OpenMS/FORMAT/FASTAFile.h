@@ -41,6 +41,7 @@
 #include <functional>
 #include <fstream>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace OpenMS
@@ -48,7 +49,7 @@ namespace OpenMS
   /**
     @brief This class serves for reading in and writing FASTA files
 
-    You can use aggegate methods load() and store() to read/write a
+    You can use aggregate methods load() and store() to read/write a
     set of protein sequences at the cost of memory.
     
     Or use single read/write of protein sequences using readStart(), readNext()
@@ -70,16 +71,16 @@ public:
       from the next line until the next > (exclusive) is stored
       in sequence.
     */
-  struct FASTAEntry
+    struct FASTAEntry
   {
       String identifier;
       String description;
       String sequence;
 
       FASTAEntry() :
-        identifier(""),
-        description(""),
-        sequence("")
+        identifier(),
+        description(),
+        sequence()
       {
       }
 
@@ -89,6 +90,31 @@ public:
         sequence(seq)
       {
       }
+      
+      FASTAEntry(const FASTAEntry& rhs)
+        :
+        identifier(rhs.identifier),
+        description(rhs.description),
+        sequence(rhs.sequence)
+      {
+      }
+
+      FASTAEntry(FASTAEntry&& rhs) noexcept
+       :
+        identifier(::std::move(rhs.identifier)),
+        description(::std::move(rhs.description)),
+        sequence(::std::move(rhs.sequence)) 
+      {
+      }
+
+      FASTAEntry& operator=(const FASTAEntry& rhs)
+      {
+        if (*this == rhs) return *this;
+        identifier = rhs.identifier;
+        description = rhs.description;
+        sequence = rhs.sequence;
+        return *this;
+      }
 
       bool operator==(const FASTAEntry& rhs) const
       {
@@ -97,19 +123,19 @@ public:
                && sequence == rhs.sequence;
       }
     
-      bool headerMatches(const FASTAEntry rhs)
+      bool headerMatches(const FASTAEntry& rhs) const
       {
         return identifier == rhs.identifier && 
   	     description == rhs.description;
       }
  
-      bool sequenceMatches(const FASTAEntry rhs)
+      bool sequenceMatches(const FASTAEntry& rhs) const
       {
         return sequence == rhs.sequence;
       }
     };
 
-    /// Copy constructor
+    /// Default constructor
     FASTAFile();
 
     /// Destructor
@@ -134,6 +160,14 @@ public:
     */
     bool readNext(FASTAEntry& protein);
 
+    /// current stream position
+    std::streampos position() const;
+
+    /// is stream at EOF?
+    bool atEnd() const;
+
+    /// seek stream to @p pos
+    bool setPosition(const std::streampos& pos);
 
     /**
     @brief Prepares a FASTA file given by 'filename' for streamed writing using writeNext().

@@ -117,7 +117,7 @@ namespace OpenMS
         }*/
         
         // loop over m/z
-        for (MSSpectrum<Peak1D>::ConstIterator it_mz = it_rt->begin(); it_mz < it_rt->end(); ++it_mz)
+        for (MSSpectrum::ConstIterator it_mz = it_rt->begin(); it_mz < it_rt->end(); ++it_mz)
         {
           double mz = it_mz->getMZ();
           MultiplexFilteredPeak peak(mz, rt, exp_picked_mapping[it_rt - exp_picked_white.begin()][it_mz - it_rt->begin()], it_rt - exp_picked_white.begin());

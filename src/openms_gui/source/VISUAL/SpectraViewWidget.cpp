@@ -316,11 +316,11 @@ namespace OpenMS
 
       for (Size i = 0; i < cl.getPeakData()->size(); ++i)
       {
-        const MSSpectrum<>& current_spec = (*cl.getPeakData())[i];
+        const MSSpectrum& current_spec = (*cl.getPeakData())[i];
 
         if (i > 0)
         {
-          const MSSpectrum<>& prev_spec = (*cl.getPeakData())[i-1];
+          const MSSpectrum& prev_spec = (*cl.getPeakData())[i-1];
           // current MS level = previous MS level + 1 (e.g. current: MS2, previous: MS1)
           if (current_spec.getMSLevel() == prev_spec.getMSLevel() + 1)
           {
@@ -462,7 +462,7 @@ namespace OpenMS
         selected_item = 0;
         for (Size i = 0; i < cl.getPeakData()->size(); ++i)
         {
-          const MSSpectrum<>& current_spec = (*cl.getPeakData())[i];
+          const MSSpectrum& current_spec = (*cl.getPeakData())[i];
           item = new QTreeWidgetItem((QTreeWidget *)0);
           item->setText(0, QString("MS") + QString::number(current_spec.getMSLevel()));
           item->setText(1, QString::number(i));
@@ -606,7 +606,7 @@ namespace OpenMS
 
         // collect all precursor that fall into the mz rt window
         PCSetType precursor_in_rt_mz_window;
-        for (std::vector<MSChromatogram<> >::const_iterator iter = exp->getChromatograms().begin(); iter != exp->getChromatograms().end(); ++iter)
+        for (std::vector<MSChromatogram >::const_iterator iter = exp->getChromatograms().begin(); iter != exp->getChromatograms().end(); ++iter)
         {
           precursor_in_rt_mz_window.insert(iter->getPrecursor());
         }
@@ -614,7 +614,7 @@ namespace OpenMS
         // determine product chromatograms for each precursor
         for (PCSetType::const_iterator pit = precursor_in_rt_mz_window.begin(); pit != precursor_in_rt_mz_window.end(); ++pit)
         {
-          for (std::vector<MSChromatogram<> >::const_iterator iter = exp->getChromatograms().begin(); iter != exp->getChromatograms().end(); ++iter)
+          for (std::vector<MSChromatogram >::const_iterator iter = exp->getChromatograms().begin(); iter != exp->getChromatograms().end(); ++iter)
           {
             if (iter->getPrecursor() == *pit)
             {
@@ -638,6 +638,10 @@ namespace OpenMS
           if (mit->first.metaValueExists("peptide_sequence"))
           {
             description = String(mit->first.getMetaValue("peptide_sequence")).toQString();
+          }
+          if (mit->first.metaValueExists("description"))
+          {
+            description = String(mit->first.getMetaValue("description")).toQString();
           }
 
           // Show all: iterate over all chromatograms corresponding to the current precursor and add action containing all chromatograms
@@ -666,7 +670,7 @@ namespace OpenMS
           // Show single chromatogram: iterate over all chromatograms corresponding to the current precursor and add action for the single chromatogram
           for (std::vector<Size>::iterator vit = mit->second.begin(); vit != mit->second.end(); ++vit)
           {
-            const MSChromatogram<> & current_chromatogram = exp->getChromatograms()[*vit];
+            const MSChromatogram & current_chromatogram = exp->getChromatograms()[*vit];
 
             // Children chromatogram entry
             QTreeWidgetItem * sub_item = new QTreeWidgetItem(item);
@@ -675,17 +679,22 @@ namespace OpenMS
               one_selected = true;
               selected_item = sub_item;
             }
+            QString chrom_description = "ion";
+            if (mit->first.metaValueExists("description"))
+            {
+              chrom_description = String(mit->first.getMetaValue("description")).toQString();
+            }
+
             sub_item->setText(0, QString("Transition"));
             sub_item->setText(1, QString::number((unsigned int)*vit));
             sub_item->setText(2, QString::number(current_chromatogram.getProduct().getMZ()));
             //sub_item->setText(7, QString::number(prod_it->second[0].getProduct().getCharge())); // TODO product charge
-            sub_item->setText(3, QString("ion")); // TODO product ion description (e.g.)
+            sub_item->setText(3, QString(chrom_description));
             if (! current_chromatogram.empty())
             {
               sub_item->setText(4, QString::number(current_chromatogram.front().getRT()));
               sub_item->setText(5, QString::number(current_chromatogram.back().getRT()));
             }
-
 
             switch (current_chromatogram.getChromatogramType())
             {

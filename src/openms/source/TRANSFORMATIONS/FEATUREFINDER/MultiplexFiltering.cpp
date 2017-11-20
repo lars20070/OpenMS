@@ -107,13 +107,13 @@ namespace OpenMS
     // loop over spectra
     for (MSExperiment::ConstIterator it_rt = exp_picked_.begin(); it_rt < exp_picked_.end(); ++it_rt)
     {
-      MSSpectrum<Peak1D> spectrum_picked_white;
+      MSSpectrum spectrum_picked_white;
       spectrum_picked_white.setRT(it_rt->getRT());
       
       std::map<int, int> mapping_spectrum;
       int count = 0;
       // loop over m/z
-      for (MSSpectrum<Peak1D>::ConstIterator it_mz = it_rt->begin(); it_mz < it_rt->end(); ++it_mz)
+      for (MSSpectrum::ConstIterator it_mz = it_rt->begin(); it_mz < it_rt->end(); ++it_mz)
       {
         if (blacklist_[it_rt - exp_picked_.begin()][it_mz - it_rt->begin()] == white)
         {

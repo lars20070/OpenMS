@@ -4,6 +4,8 @@ set(directory source/APPLICATIONS/UTILS)
 ### list all filenames of the directory here
 set(UTILS_executables
 AccurateMassSearch
+ClusterMassTraces
+ClusterMassTracesByPrecursor
 CVInspector
 DatabaseFilter
 DecoyDatabase
@@ -34,6 +36,7 @@ OpenMSInfo
 OpenPepXL
 OpenPepXLLF
 PeakPickerIterative
+PSMFeatureExtractor
 QCCalculator
 QCEmbedder
 QCExporter
@@ -41,6 +44,7 @@ QCExtractor
 QCImporter
 QCMerger
 QCShrinker
+RNADigestor
 RNPxl
 RNPxlXICFilter
 RNPxlSearch
@@ -48,11 +52,11 @@ RTEvaluation
 SemanticValidator
 SequenceCoverageCalculator
 SimpleSearchEngine
+SiriusAdapter
 SpecLibCreator
 SpectraSTSearchAdapter
 SvmTheoreticalSpectrumGeneratorTrainer
 TICCalculator
-TopPerc
 TransformationEvaluation
 XFDR
 XMLValidator

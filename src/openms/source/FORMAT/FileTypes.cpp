@@ -133,8 +133,10 @@ namespace OpenMS
     targetMap[FileTypes::PQP] = "pqp";
     targetMap[FileTypes::OSW] = "osw";
     targetMap[FileTypes::PSMS] = "psms";
+    targetMap[FileTypes::PIN] = "pin";
+    targetMap[FileTypes::SPLIB] = "splib";
     targetMap[FileTypes::PARAMXML] = "paramXML";
-
+    
     return targetMap;
   }
 
