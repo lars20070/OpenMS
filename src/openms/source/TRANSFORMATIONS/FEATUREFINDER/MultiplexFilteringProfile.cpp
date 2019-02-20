@@ -40,7 +40,7 @@
 #include <OpenMS/TRANSFORMATIONS/FEATUREFINDER/MultiplexFilteringProfile.h>
 #include <OpenMS/MATH/STATISTICS/StatisticFunctions.h>
 
-//#define DEBUG
+#define DEBUG
 
 using namespace std;
 using namespace boost::math;
@@ -139,8 +139,11 @@ namespace OpenMS
     }
     
     // loop over all patterns
-    for (unsigned pattern_idx = 0; pattern_idx < patterns_.size(); ++pattern_idx)
+    //for (unsigned pattern_idx = 0; pattern_idx < patterns_.size(); ++pattern_idx)
+    for (unsigned pattern_idx = 8; pattern_idx < 9; ++pattern_idx)
     {
+	  //std::cout << "pattern = " << pattern_idx << "\n";
+		
       // current pattern
       MultiplexIsotopicPeakPattern pattern = patterns_[pattern_idx];
       
@@ -176,10 +179,23 @@ namespace OpenMS
           double mz = it_mz->getMZ();
           MultiplexFilteredPeak peak(mz, rt, exp_centroided_mapping_[idx_rt][it_mz - it_rt.begin()], idx_rt);
           
+          //bool write_debug = ((pattern_idx == 8) && (rt > 2532) && (rt < 2533) && (519 < mz) && (mz < 519));
+          bool write_debug = ((pattern_idx == 8) && (2532 < rt) && (rt < 2533));
+          
+          if (write_debug)
+          {
+			  std::cout << "pattern = " << pattern_idx << "    RT = " << rt << "    mz = " << mz << "\n";
+		  }
+          
           if (!(filterPeakPositions_(it_mz, exp_centroided_white_.begin(), it_rt_picked_band_begin, it_rt_picked_band_end, pattern, peak)))
           {
             continue;
           }
+          
+          if (write_debug)
+          {
+			std::cout << "PATTERN FOUND!\n";
+		  }
           
           size_t mz_idx = exp_centroided_mapping_[idx_rt][it_mz - it_rt.begin()];
           double peak_min = boundaries_[idx_rt][mz_idx].mz_min;
