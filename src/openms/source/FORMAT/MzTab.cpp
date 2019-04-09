@@ -2866,6 +2866,14 @@ Not sure how to handle these:
         row.peptide_abundance_stdev_study_variable[study_variable] = MzTabDouble();
         row.peptide_abundance_std_error_study_variable[study_variable] = MzTabDouble();
         row.peptide_abundance_study_variable[study_variable] = MzTabDouble();
+        
+        MzTabOptionalColumnEntry opt_global_mass_to_charge_study_variable;
+        stringstream stream_temp;
+        stream_temp << "opt_global_mass_to_charge_study_variable[";
+        stream_temp << study_variable;
+        stream_temp << "]";
+        opt_global_mass_to_charge_study_variable.first = String(stream_temp.str());
+        row.opt_.push_back(opt_global_mass_to_charge_study_variable);
       }
 
       for (Size ms_run = 1; ms_run <= ms_runs.size(); ++ms_run)
