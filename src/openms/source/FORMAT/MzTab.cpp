@@ -1680,11 +1680,19 @@ namespace OpenMS
       row.best_search_engine_score[1] = MzTabDouble();
       row.search_engine_score_ms_run[1][1] = MzTabDouble();
 
+      // create opt_ columns for peptide mass-to-charge ratio and retention time
+      MzTabOptionalColumnEntry opt_global_mass_to_charge_study_variable;
+      opt_global_mass_to_charge_study_variable.first = String("opt_global_mass_to_charge_study_variable[1]");
+      row.opt_.push_back(opt_global_mass_to_charge_study_variable);
+      MzTabOptionalColumnEntry opt_global_retention_time_study_variable;
+      opt_global_retention_time_study_variable.first = String("opt_global_retention_time_study_variable[1]");
+      row.opt_.push_back(opt_global_retention_time_study_variable);
+
       // create opt_ column for peptide sequence containing modification
       MzTabOptionalColumnEntry opt_global_modified_sequence;
       opt_global_modified_sequence.first = String("opt_global_modified_sequence");
       row.opt_.push_back(opt_global_modified_sequence);
-
+      
       // create and fill opt_ columns for feature (peptide) user values
       addMetaInfoToOptionalColumns(feature_user_value_keys, row.opt_, String("global"), f);
 
